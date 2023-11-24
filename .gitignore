@@ -1,0 +1,8 @@
+/build-x86_64-linux/
+/xmonad-x86_64-linux
+/xmonad.errors
+/.stack-work/
+/stack.yaml.lock
+*.hi
+*.o
+/neovim/plugin/

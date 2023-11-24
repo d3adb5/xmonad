@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request: {}
+  push:
+    branches: [ master ]
+
+jobs:
+  xmonad:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: freckle/stack-cache-action@v2
+      - uses: haskell/actions/setup@v2
+        with:
+          enable-stack: true
+          stack-version: latest
+          stack-no-global: true
+
+      - name: Install C build dependencies
+        run: sudo apt-get install -y
+          libx11-dev libxft-dev libxinerama-dev libxrandr-dev libxss-dev
+
+      - name: Setup GHC through Stack
+        run: stack setup
+
+      - name: Build dependencies
+        run: stack build --only-dependencies
+
+      - name: Build
+        run: stack build
