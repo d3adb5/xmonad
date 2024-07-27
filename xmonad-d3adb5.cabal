@@ -35,7 +35,6 @@ executable xmonad
       XMonad.Actions.Hidden
       XMonad.Actions.Pip
       XMonad.Layout.BoringFloats
-      XMonad.Layout.Cards
       XMonad.Layout.Hidden
       XMonad.Layout.HiddenQueueLayout
       XMonad.Layout.VoidBorders
@@ -55,6 +54,6 @@ executable xmonad
     , process ==1.*
     , split ==0.2.*
     , utility-ht ==0.0.*
-    , xmonad >=0.17
-    , xmonad-contrib >=0.17
+    , xmonad >=0.18
+    , xmonad-contrib >=0.18
   default-language: Haskell2010
