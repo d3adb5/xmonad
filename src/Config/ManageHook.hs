@@ -26,12 +26,14 @@ manageHook = composeAll
   , className =? "Gimp" --> moveToWorkspace "gimp"
   , composeOne $ hookClassNames centerFloat floatClassNames
               ++ hookPropValues centerFloat floatPropValues
+              ++ hookClassNames (moveToWorkspace "games") gameClassNames
               ++ [ isTile -?> insertPosition Master Newer
                  , isDialog -?> centerFloat ]
   ]
   where
     floatClassNames = ["Pqiv", "sun-awt-X11-XFramePeer", "Udiskie", "fzfmenu"]
     mediaClassNames = ["Spotify", "plexmediaplayer"]
+    gameClassNames = ["steam"]
     dcClassNames = ["discord"]
     floatPropValues =
       [ ("WM_WINDOW_ROLE", "GtkFileChooserDialog")

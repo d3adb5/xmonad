@@ -22,7 +22,7 @@ layoutHook
   . boringWindows
   . avoidStruts
   . onWorkspaces ["chat"] (gridLayout ||| fullLayout)
-  . onWorkspaces ["gimp", "media"] (fullLayout ||| threeLayout)
+  . onWorkspaces ["gimp", "media", "games"] (fullLayout ||| threeLayout)
   . onWorkspaces ["float"] (floatLayout ||| gridLayout)
   $ threeLayout ||| fullLayout
 
