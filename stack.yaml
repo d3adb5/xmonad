@@ -1,8 +1,3 @@
-resolver: lts-22.31
+resolver: lts-23.4
 packages:
   - "."
-
-extra-deps:
-- xmonad-0.18.0@sha256:22300a2626ba5b00dcf0e5071d56ccb42140fb849ee6ea7bf1337ed07de33642,5453
-- github: xmonad/xmonad-contrib
-  commit: 0dcecb41c57d0ea6ac177ff16511f0db0eb703b8
