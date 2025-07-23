@@ -39,7 +39,7 @@ threeLayout
   = reflectHoriz
   . hideNAt 2 3
   . normalBorders
-  $ ThreeColMid 1 (3/100) (1/2)
+  $ ThreeColMid 1 (2/100) (1/2)
 
 fullLayout
   = voidBorders
