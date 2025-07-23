@@ -27,10 +27,10 @@ executables:
     - -j
     dependencies:
     - base >= 4.7 && < 5
-    - containers == 0.6.*
-    - data-default == 0.7.*
+    - containers == 0.7.*
+    - data-default == 0.8.*
     - process == 1.*
     - split == 0.2.*
     - utility-ht == 0.0.*
-    - xmonad >= 0.17
-    - xmonad-contrib >= 0.17
+    - xmonad >= 0.18
+    - xmonad-contrib >= 0.18

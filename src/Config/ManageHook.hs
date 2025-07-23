@@ -2,6 +2,7 @@
 module Config.ManageHook (manageHook, scratchpads) where
 
 import XMonad hiding (manageHook, borderWidth)
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsManageHook)
 import XMonad.Hooks.InsertPosition
 import XMonad.Hooks.ManageHelpers
 import XMonad.Util.CenterRationalRect
@@ -21,17 +22,20 @@ import Data.Ratio
 manageHook :: ManageHook
 manageHook = composeAll
   [ namedScratchpadManageHook scratchpads
+  , ewmhDesktopsManageHook
   , classNameIn dcClassNames --> moveToWorkspace "chat"
   , classNameIn mediaClassNames --> moveToWorkspace "media"
   , className =? "Gimp" --> moveToWorkspace "gimp"
   , composeOne $ hookClassNames centerFloat floatClassNames
               ++ hookPropValues centerFloat floatPropValues
+              ++ hookClassNames (moveToWorkspace "games") gameClassNames
               ++ [ isTile -?> insertPosition Master Newer
                  , isDialog -?> centerFloat ]
   ]
   where
     floatClassNames = ["Pqiv", "sun-awt-X11-XFramePeer", "Udiskie", "fzfmenu"]
     mediaClassNames = ["Spotify", "plexmediaplayer"]
+    gameClassNames = ["steam"]
     dcClassNames = ["discord"]
     floatPropValues =
       [ ("WM_WINDOW_ROLE", "GtkFileChooserDialog")
@@ -52,11 +56,11 @@ scratchpads = singleton $ NS name command query hook
 -- | Properly center a floating window in the available screen real estate.
 centerFloat :: ManageHook
 centerFloat = doFloatDep $ \(W.RationalRect _ _ widthRatio heightRatio) ->
-  let  addedWidthRatio = widthRatio + 2 * (borderWidth % screenWidth)
-       addedHeightRatio = heightRatio + 2 * (borderWidth % screenHeight)
-       panelHeightRatio = panelHeight % screenHeight
-       offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
-               | otherwise = 0
+  let addedWidthRatio = widthRatio + 2 * (borderWidth % screenWidth)
+      addedHeightRatio = heightRatio + 2 * (borderWidth % screenHeight)
+      panelHeightRatio = panelHeight % screenHeight
+      offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
+              | otherwise = 0
   in centerRRectOffsetY offsetY addedWidthRatio addedHeightRatio
 
 -- | Shift a window to a given workspace (create it if it doesn't exist) and

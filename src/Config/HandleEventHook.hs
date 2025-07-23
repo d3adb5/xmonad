@@ -1,13 +1,15 @@
 module Config.HandleEventHook (handleEventHook) where
 
 import XMonad hiding (handleEventHook)
-import XMonad.Layout.MagicFocus (followOnlyIf, disableFollowOnWS)
+
+import qualified XMonad.Util.Hacks as Hacks
 
 import Data.Semigroup (All(..))
 
 handleEventHook :: Event -> X All
 handleEventHook
-    = followOnlyIf (disableFollowOnWS ["dev"])
+    = Hacks.windowedFullscreenFixEventHook
+  <+> Hacks.fixSteamFlicker
   <+> defaultHEHook
 
 defaultHEHook :: Event -> X All

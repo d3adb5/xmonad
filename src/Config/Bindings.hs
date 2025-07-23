@@ -24,8 +24,8 @@ keyBindings =
   , ("M-<R>", moveTo Next (WSIs . return $ (/= "NSP") . W.tag))
   , ("M-<L>", moveTo Prev (WSIs . return $ (/= "NSP") . W.tag))
   , ("M-a", windowsMenu "fzfmenu" >>= windows . W.focusWindow)
-  , ("M-y", selectWorkspace' "fzfmenu" fzfmenuArgs)
-  , ("M-u", renameWorkspace' "fzfmenu" fzfmenuArgs)
+  , ("M-y", selectWorkspace' "fzfmenu" fzfmenuArgsSelect)
+  , ("M-u", renameWorkspace' "fzfmenu" fzfmenuArgsRename)
   , ("M-i", removeWorkspaceIfEmpty)
   , ("M-M1-h", withFocused hideWindow)
   , ("M-M1-j", withFocused swapWithNextHidden)
@@ -34,9 +34,9 @@ keyBindings =
   , ("M-[", namedScratchpadAction MH.scratchpads "term")
   , ("M-C-y", chooseWorkspace >>= windows . copy)
   , ("M-<Backspace>", kill1)
-  , ("M-S-y", withFocused $ moveToWorkspace' "fzfmenu" fzfmenuArgs)
+  , ("M-S-y", withFocused $ moveToWorkspace' "fzfmenu" fzfmenuArgsSelect)
   , ("M-M1-c", withFocused $ keysMoveWindowTo (681,392) (1/2,1/2))
-  ] ++ [ ("M-" ++ show n, withNthWorkspace' notNSP W.greedyView (n - 1))
+  ] ++ [ ("M-" ++ show n, withNthWorkspace' notNSP W.view (n - 1))
          | n <- [1..9] ]
     ++ [ ("M-C-" ++ show n, withNthWorkspace' notNSP copy (n - 1))
          | n <- [1..9] ]
@@ -58,3 +58,9 @@ notNSP = filter (/= "NSP")
 
 fzfmenuArgs :: [String]
 fzfmenuArgs = [ "--print-query", "--reverse", "+m" ]
+
+fzfmenuArgsSelect :: [String]
+fzfmenuArgsSelect = fzfmenuArgs ++ [ "--prompt", "'Workspace: '" ]
+
+fzfmenuArgsRename :: [String]
+fzfmenuArgsRename = fzfmenuArgs ++ [ "--prompt", "'New workspace name: '" ]
