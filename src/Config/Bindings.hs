@@ -36,7 +36,7 @@ keyBindings =
   , ("M-<Backspace>", kill1)
   , ("M-S-y", withFocused $ moveToWorkspace' "fzfmenu" fzfmenuArgsSelect)
   , ("M-M1-c", withFocused $ keysMoveWindowTo (681,392) (1/2,1/2))
-  ] ++ [ ("M-" ++ show n, withNthWorkspace' notNSP W.greedyView (n - 1))
+  ] ++ [ ("M-" ++ show n, withNthWorkspace' notNSP W.view (n - 1))
          | n <- [1..9] ]
     ++ [ ("M-C-" ++ show n, withNthWorkspace' notNSP copy (n - 1))
          | n <- [1..9] ]
