@@ -56,11 +56,11 @@ scratchpads = singleton $ NS name command query hook
 -- | Properly center a floating window in the available screen real estate.
 centerFloat :: ManageHook
 centerFloat = doFloatDep $ \(W.RationalRect _ _ widthRatio heightRatio) ->
-  let  addedWidthRatio = widthRatio + 2 * (borderWidth % screenWidth)
-       addedHeightRatio = heightRatio + 2 * (borderWidth % screenHeight)
-       panelHeightRatio = panelHeight % screenHeight
-       offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
-               | otherwise = 0
+  let addedWidthRatio = widthRatio + 2 * (borderWidth % screenWidth)
+      addedHeightRatio = heightRatio + 2 * (borderWidth % screenHeight)
+      panelHeightRatio = panelHeight % screenHeight
+      offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
+              | otherwise = 0
   in centerRRectOffsetY offsetY addedWidthRatio addedHeightRatio
 
 -- | Shift a window to a given workspace (create it if it doesn't exist) and
