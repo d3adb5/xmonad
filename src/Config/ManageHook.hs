@@ -2,6 +2,7 @@
 module Config.ManageHook (manageHook, scratchpads) where
 
 import XMonad hiding (manageHook, borderWidth)
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsManageHook)
 import XMonad.Hooks.InsertPosition
 import XMonad.Hooks.ManageHelpers
 import XMonad.Util.CenterRationalRect
@@ -21,6 +22,7 @@ import Data.Ratio
 manageHook :: ManageHook
 manageHook = composeAll
   [ namedScratchpadManageHook scratchpads
+  , ewmhDesktopsManageHook
   , classNameIn dcClassNames --> moveToWorkspace "chat"
   , classNameIn mediaClassNames --> moveToWorkspace "media"
   , className =? "Gimp" --> moveToWorkspace "gimp"
