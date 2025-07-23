@@ -21,8 +21,9 @@ layoutHook
   = lessBorders OnlyScreenFloat
   . boringWindows
   . avoidStruts
-  . onWorkspaces ["chat"] (gridLayout ||| fullLayout)
-  . onWorkspaces ["gimp", "media", "games"] (fullLayout ||| threeLayout)
+  . onWorkspaces ["chat"] (gridLayout ||| fullLayout ||| threeLayout)
+  . onWorkspaces ["gimp", "media"] (fullLayout ||| floatLayout)
+  . onWorkspaces ["games"] (fullLayout ||| gridLayout ||| floatLayout)
   . onWorkspaces ["float"] (floatLayout ||| gridLayout)
   $ threeLayout ||| fullLayout
 
