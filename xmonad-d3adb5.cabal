@@ -41,6 +41,7 @@ executable xmonad
       XMonad.Util.CenterRationalRect
       XMonad.Util.DmenuPrompts
       XMonad.Util.Hidden
+      XMonad.Util.WindowTags
       Paths_xmonad_d3adb5
   autogen-modules:
       Paths_xmonad_d3adb5

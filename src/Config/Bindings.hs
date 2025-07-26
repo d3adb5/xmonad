@@ -10,8 +10,11 @@ import XMonad.Actions.FloatKeys (keysMoveWindowTo)
 import XMonad.Actions.Hidden
 import XMonad.Actions.PhysicalScreens
 import XMonad.Layout.BoringWindows (focusDown, focusUp)
-import XMonad.Util.DmenuPrompts (windowsMenu)
+import XMonad.Util.DmenuPrompts (windowsMenu, windowTagsMenuArgs)
 import XMonad.Util.NamedScratchpad
+import XMonad.Util.WindowTags
+
+import Control.Monad (when)
 
 import qualified Config.ManageHook as MH
 import qualified XMonad.StackSet as W
@@ -23,6 +26,8 @@ keyBindings =
   , ("M-k", focusUp)
   , ("M-<R>", moveTo Next (WSIs . return $ (/= "NSP") . W.tag))
   , ("M-<L>", moveTo Prev (WSIs . return $ (/= "NSP") . W.tag))
+  , ("M-C-t", withFocused addWindowTagMenu)
+  , ("M-S-t", withFocused removeWindowTagMenu)
   , ("M-a", windowsMenu "fzfmenu" >>= windows . W.focusWindow)
   , ("M-y", selectWorkspace' "fzfmenu" fzfmenuArgsSelect)
   , ("M-u", renameWorkspace' "fzfmenu" fzfmenuArgsRename)
@@ -64,3 +69,21 @@ fzfmenuArgsSelect = fzfmenuArgs ++ [ "--prompt", "'Workspace: '" ]
 
 fzfmenuArgsRename :: [String]
 fzfmenuArgsRename = fzfmenuArgs ++ [ "--prompt", "'New workspace name: '" ]
+
+fzfmenuArgsAddTag :: [String]
+fzfmenuArgsAddTag = fzfmenuArgs ++ [ "--prompt", "' New window tag: '" ]
+
+fzfmenuArgsRemoveTag :: [String]
+fzfmenuArgsRemoveTag = fzfmenuArgs ++ [ "--prompt", "' Remove window tag: '" ]
+
+addWindowTagMenu :: Window -> X ()
+addWindowTagMenu w = do
+  selection <- windowTagsMenuArgs "fzfmenu" fzfmenuArgsAddTag w
+  when (not $ null selection) $
+    addWindowTag w selection
+
+removeWindowTagMenu :: Window -> X ()
+removeWindowTagMenu w = do
+  selection <- windowTagsMenuArgs "fzfmenu" fzfmenuArgsRemoveTag w
+  when (not $ null selection) $
+    removeWindowTag w selection

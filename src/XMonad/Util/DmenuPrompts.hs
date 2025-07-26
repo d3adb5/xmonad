@@ -12,17 +12,20 @@ module XMonad.Util.DmenuPrompts
   , workspaceMenu
   , workspaceDmenuArgs
   , workspaceDmenu
+  , windowTagsMenuArgs
   ) where
 
 import XMonad hiding (workspaces)
 import XMonad.StackSet (workspaces, allWindows, tag)
 import XMonad.Actions.DynamicWorkspaceOrder (getSortByOrder)
+import XMonad.Util.WindowTags (windowTags)
 
 import System.IO
 import System.Process (runInteractiveProcess)
 import Control.Monad (when)
 import Data.Char (toUpper)
 import Data.List.Split (splitOneOf)
+import Data.Set (toList)
 
 getLastLineFromProcess :: MonadIO m => FilePath -> [String] -> String -> m String
 getLastLineFromProcess cmd args input = io $ do
@@ -42,6 +45,9 @@ menuArgs' mcmd args opts = filter (/= '\n') <$>
 dmenuArgs :: [String] -> [String] -> X String
 dmenuArgs = menuArgs' "dmenu"
 
+windowTagsMenuArgs :: String -> [String] -> Window -> X String
+windowTagsMenuArgs m a w = runQuery windowTags w >>= menuArgs' m a . toList
+
 windowsMenuArgs :: String -> [String] -> X Window
 windowsMenuArgs m a = do
   ws <- gets (allWindows . windowset)
@@ -54,14 +60,20 @@ windowPrettyPrint w = foldl optionConcat (show w) <$> mapM (`runQuery` w) window
 
 -- Lambda lifted way to concatenate two strings into a menu option.
 optionConcat :: String -> String -> String
-optionConcat s1 s2 = s1 ++ " • " ++ s2
+optionConcat = delimConcat " • "
+
+delimConcat :: String -> String -> String -> String
+delimConcat _ "" s2 = s2
+delimConcat _ s1 "" = s1
+delimConcat d s1 s2 = s1 ++ d ++ s2
 
 -- List of queries to run for a Window when listing it as a menu option.
 windowQueries :: [Query String]
-windowQueries = [titlefy <$> className, titlefy <$> appName, title]
+windowQueries = [titlefy <$> className, titlefy <$> appName, title, windowTags']
   where titlefy = unwords . map capitalize . splitOneOf " -_"
         capitalize (h:t) = toUpper h : t
         capitalize [] = []
+        windowTags' = foldl (delimConcat ", ") "" <$> windowTags
 
 workspaceMenuArgs :: String -> [String] -> X String
 workspaceMenuArgs m a = do
