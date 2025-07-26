@@ -65,10 +65,10 @@ fzfmenuArgs :: [String]
 fzfmenuArgs = [ "--print-query", "--reverse", "+m" ]
 
 fzfmenuArgsSelect :: [String]
-fzfmenuArgsSelect = fzfmenuArgs ++ [ "--prompt", "'Workspace: '" ]
+fzfmenuArgsSelect = fzfmenuArgs ++ [ "--prompt", "' Workspace: '" ]
 
 fzfmenuArgsRename :: [String]
-fzfmenuArgsRename = fzfmenuArgs ++ [ "--prompt", "'New workspace name: '" ]
+fzfmenuArgsRename = fzfmenuArgs ++ [ "--prompt", "' New workspace name: '" ]
 
 fzfmenuArgsAddTag :: [String]
 fzfmenuArgsAddTag = fzfmenuArgs ++ [ "--prompt", "' New window tag: '" ]
