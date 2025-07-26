@@ -25,7 +25,7 @@ layoutHook
   . onWorkspaces ["gimp", "media"] (fullLayout ||| floatLayout)
   . onWorkspaces ["games"] (fullLayout ||| gridLayout ||| floatLayout)
   . onWorkspaces ["float"] (floatLayout ||| gridLayout)
-  $ threeLayout ||| fullLayout
+  $ threeLayout ||| fullLayout ||| gridLayout
 
 floatLayout
   = normalBorders
