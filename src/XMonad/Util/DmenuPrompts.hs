@@ -20,9 +20,9 @@ import XMonad.StackSet (workspaces, allWindows, tag)
 import XMonad.Actions.DynamicWorkspaceOrder (getSortByOrder)
 import XMonad.Util.WindowTags (windowTags)
 
-import System.IO
+import System.IO hiding (hGetContents)
+import System.IO.Strict (hGetContents)
 import System.Process (runInteractiveProcess)
-import Control.Monad (when)
 import Data.Char (toUpper)
 import Data.List.Split (splitOneOf)
 import Data.Set (toList)
@@ -33,7 +33,6 @@ getLastLineFromProcess cmd args input = io $ do
   hPutStr pin input
   hClose pin
   output <- hGetContents pout
-  when (output == output) $ return ()
   hClose pout
   hClose perr
   return $ last (lines output)

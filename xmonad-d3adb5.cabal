@@ -54,6 +54,7 @@ executable xmonad
     , data-default ==0.8.*
     , process ==1.*
     , split ==0.2.*
+    , strict ==0.5.*
     , utility-ht ==0.0.*
     , xmonad >=0.18
     , xmonad-contrib >=0.18
