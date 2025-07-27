@@ -1,21 +1,16 @@
 module XMonad.Actions.DmenuWorkspaces
-  ( selectWorkspace
-  , selectWorkspace'
-  , moveToWorkspace
+  ( selectWorkspace'
   , moveToWorkspace'
-  , renameWorkspace
   , renameWorkspace'
   , removeWorkspace
   , removeWorkspaceIfEmpty
   , removeWorkspaceWhen
-  , chooseWorkspace
-  , chooseWorkspace'
   ) where
 
 import XMonad hiding (workspaces)
 import XMonad.StackSet hiding (filter)
 import qualified XMonad.Actions.DynamicWorkspaces as DW
-import XMonad.Util.DmenuPrompts
+import XMonad.Util.MenuPrompts
 import XMonad.Actions.DynamicWorkspaceOrder (updateName, removeName)
 
 import Control.Monad (when)
@@ -40,36 +35,19 @@ sendTo wn ws = do
     DW.addWorkspace ws
   windows $ greedyView ws . shiftWin ws wn
 
--- | Prompts the user through dmenu and switches to the then chosen workspace.
-selectWorkspace :: X ()
-selectWorkspace = chooseWorkspace >>= goTo
-
 selectWorkspace' :: String -> [String] -> X ()
-selectWorkspace' cmd args = chooseWorkspace' cmd args >>= goTo
-
--- | Creates a dmenu prompt with workspace names and returns the chosen name.
-chooseWorkspace :: X String
-chooseWorkspace = workspaceDmenu
-
-chooseWorkspace' :: String -> [String] -> X String
-chooseWorkspace' = workspaceMenuArgs
+selectWorkspace' cmd args = chooseWorkspace cmd args >>= goTo
 
 -- | Prompts the user through dmenu and moves the given window to the chosen
 -- workspace.
-moveToWorkspace :: Window -> X ()
-moveToWorkspace = (chooseWorkspace >>=) . sendTo
-
 moveToWorkspace' :: String -> [String] -> Window -> X ()
-moveToWorkspace' cmd args w = chooseWorkspace' cmd args >>= sendTo w
+moveToWorkspace' cmd args w = chooseWorkspace cmd args >>= sendTo w
 
 -- | Renames the current workspace by prompting the user through dmenu for a new
 -- workspace tag. No entries are given, as renaming should not be picked from a
 -- list of already used tags.
-renameWorkspace :: X ()
-renameWorkspace = dmenuArgs [] [] >>= renameCurrentWorkspace
-
 renameWorkspace' :: String -> [String] -> X ()
-renameWorkspace' cmd args = menuArgs' cmd args [] >>= renameCurrentWorkspace
+renameWorkspace' cmd args = runMenu cmd args [] >>= renameCurrentWorkspace
 
 -- | Manually updates the current workspace tag in the WindowSet with a given
 -- string.

@@ -29,6 +29,7 @@ executables:
     - base >= 4.7 && < 5
     - containers == 0.7.*
     - data-default == 0.8.*
+    - extra == 1.*
     - process == 1.*
     - split == 0.2.*
     - strict == 0.5.*

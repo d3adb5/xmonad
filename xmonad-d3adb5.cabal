@@ -39,8 +39,8 @@ executable xmonad
       XMonad.Layout.HiddenQueueLayout
       XMonad.Layout.VoidBorders
       XMonad.Util.CenterRationalRect
-      XMonad.Util.DmenuPrompts
       XMonad.Util.Hidden
+      XMonad.Util.MenuPrompts
       XMonad.Util.WindowTags
       Paths_xmonad_d3adb5
   autogen-modules:
@@ -52,6 +52,7 @@ executable xmonad
       base >=4.7 && <5
     , containers ==0.7.*
     , data-default ==0.8.*
+    , extra ==1.*
     , process ==1.*
     , split ==0.2.*
     , strict ==0.5.*
