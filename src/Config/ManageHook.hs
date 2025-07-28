@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wno-type-defaults -Wno-unused-top-binds #-}
 module Config.ManageHook (manageHook, scratchpads) where
 
 import XMonad hiding (manageHook, borderWidth)
@@ -7,7 +6,6 @@ import XMonad.Hooks.InsertPosition
 import XMonad.Hooks.ManageHelpers
 import XMonad.Util.CenterRationalRect
 import XMonad.Util.NamedScratchpad hiding (name, query, hook)
-import XMonad.Util.WindowProperties (getProp32s)
 import XMonad.StackSet (floating)
 
 import qualified XMonad.Actions.DynamicWorkspaces as DW
@@ -16,7 +14,6 @@ import qualified XMonad.StackSet as W
 import Config.Dimensions
 import Data.List (singleton)
 import Data.Map (member)
-import Data.Maybe (isJust)
 import Data.Ratio
 
 manageHook :: ManageHook
@@ -49,7 +46,7 @@ scratchpads = singleton $ NS name command query hook
   where command = "st -n scratch -t scratch -e tmux new -A -s scratch"
         hook = customFloating $ centerIRectOffsetY panelHeight tw th sw sh
         (tw, th) = (columnsToWindowWidth 150, linesToWindowHeight 40)
-        (sw, sh) = (screenWidth, screenHeight)
+        (sw, sh) = (screenWidth, screenHeight) :: (Int, Int)
         query = appName =? "scratch"
         name = "term"
 
@@ -74,12 +71,6 @@ moveToWorkspace wkspc = do
 -- given list to @hook@.
 hookClassNames :: ManageHook -> [String] -> [MaybeManageHook]
 hookClassNames hook = map ((-?> hook) . (className =?))
-
--- | Creates a list of MaybeManageHooks by querying for the presence of
--- properties from a given list and maybe-hooking them to @hook@.
-hookPropExists :: ManageHook -> [String] -> [MaybeManageHook]
-hookPropExists hook = map ((-?> hook) . prop32Exists)
-  where prop32Exists prop = fmap isJust $ ask >>= liftX . getProp32s prop
 
 -- | Creates a list of MaybeManageHooks by querying for property values from a
 -- list of expected property-value pairs and maybe hooking them to @hook@.
