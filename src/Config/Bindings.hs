@@ -3,18 +3,14 @@ module Config.Bindings (keyBindings, mouseBindings, removedBindings) where
 import XMonad hiding (mouseResizeWindow, mouseBindings)
 import XMonad.Actions.CopyWindow (copy, kill1)
 import XMonad.Actions.CycleWS
-import XMonad.Actions.DmenuWorkspaces
+import XMonad.Actions.Fzfmenu
 import XMonad.Actions.DynamicWorkspaceOrder (withNthWorkspace')
 import XMonad.Actions.FlexibleResize (mouseResizeWindow)
 import XMonad.Actions.FloatKeys (keysMoveWindowTo)
 import XMonad.Actions.Hidden
 import XMonad.Actions.PhysicalScreens
 import XMonad.Layout.BoringWindows (focusDown, focusUp)
-import XMonad.Util.MenuPrompts
 import XMonad.Util.NamedScratchpad
-import XMonad.Util.WindowTags
-
-import Control.Monad (when)
 
 import qualified Config.ManageHook as MH
 import qualified XMonad.StackSet as W
@@ -26,20 +22,20 @@ keyBindings =
   , ("M-k", focusUp)
   , ("M-<R>", moveTo Next (WSIs . return $ (/= "NSP") . W.tag))
   , ("M-<L>", moveTo Prev (WSIs . return $ (/= "NSP") . W.tag))
-  , ("M-C-t", withFocused addWindowTagMenu)
-  , ("M-S-t", withFocused removeWindowTagMenu)
-  , ("M-a", chooseWindow "fzfmenu" [] >>= windows . W.focusWindow)
-  , ("M-y", selectWorkspace' "fzfmenu" fzfmenuArgsSelect)
-  , ("M-u", renameWorkspace' "fzfmenu" fzfmenuArgsRename)
+  , ("M-C-t", withFocused addWindowTag)
+  , ("M-S-t", withFocused removeWindowTag)
+  , ("M-a", selectWindow)
+  , ("M-y", selectWorkspace)
+  , ("M-u", renameWorkspace)
   , ("M-i", removeWorkspaceIfEmpty)
   , ("M-M1-h", withFocused hideWindow)
   , ("M-M1-j", withFocused swapWithNextHidden)
   , ("M-M1-k", withFocused swapWithLastHidden)
   , ("M-M1-l", withLastHidden unhideWindow)
   , ("M-[", namedScratchpadAction MH.scratchpads "term")
-  , ("M-C-y", chooseWorkspace "fzfmenu" [] >>= windows . copy)
+  , ("M-C-y", withFocused copyToWorkspace)
   , ("M-<Backspace>", kill1)
-  , ("M-S-y", withFocused $ moveToWorkspace' "fzfmenu" fzfmenuArgsSelect)
+  , ("M-S-y", withFocused $ moveToWorkspace)
   , ("M-M1-c", withFocused $ keysMoveWindowTo (681,392) (1/2,1/2))
   ] ++ [ ("M-" ++ show n, withNthWorkspace' notNSP W.view (n - 1))
          | n <- [1..9] ]
@@ -60,30 +56,3 @@ mouseBindings = [((mod4Mask, button3), \w -> focus w >> mouseResizeWindow w)]
 
 notNSP :: [WorkspaceId] -> [WorkspaceId]
 notNSP = filter (/= "NSP")
-
-fzfmenuArgs :: [String]
-fzfmenuArgs = [ "--print-query", "--reverse", "+m" ]
-
-fzfmenuArgsSelect :: [String]
-fzfmenuArgsSelect = fzfmenuArgs ++ [ "--prompt", "' Workspace: '" ]
-
-fzfmenuArgsRename :: [String]
-fzfmenuArgsRename = fzfmenuArgs ++ [ "--prompt", "' New workspace name: '" ]
-
-fzfmenuArgsAddTag :: [String]
-fzfmenuArgsAddTag = fzfmenuArgs ++ [ "--prompt", "' New window tag: '" ]
-
-fzfmenuArgsRemoveTag :: [String]
-fzfmenuArgsRemoveTag = fzfmenuArgs ++ [ "--prompt", "' Remove window tag: '" ]
-
-addWindowTagMenu :: Window -> X ()
-addWindowTagMenu w = do
-  selection <- chooseWindowTag "fzfmenu" fzfmenuArgsAddTag w
-  when (not $ null selection) $
-    addWindowTag w selection
-
-removeWindowTagMenu :: Window -> X ()
-removeWindowTagMenu w = do
-  selection <- chooseWindowTag "fzfmenu" fzfmenuArgsRemoveTag w
-  when (not $ null selection) $
-    removeWindowTag w selection
