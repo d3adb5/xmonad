@@ -40,21 +40,25 @@ sendToWorkspace w ws = do
     DW.addWorkspace ws
   windows $ greedyView ws . shiftWin ws w
 
+-- | Focus a user-selected window from all of those available.
 selectWindow :: X ()
 selectWindow = chooseWindow fzfMenu fzfWindowArgs >>= windows . focusWindow
 
+-- | Add a user-defined tag to a window. Current tags are shown.
 addWindowTag :: Window -> X ()
 addWindowTag w = do
   selection <- chooseWindowTag fzfMenu fzfAddTagArgs w
   when (not $ null selection) $
     WT.addWindowTag w selection
 
+-- | Remove a user-selected from the given window's list of tags.
 removeWindowTag :: Window -> X ()
 removeWindowTag w = do
   selection <- chooseWindowTag fzfMenu fzfDelTagArgs w
   when (not $ null selection) $
     WT.removeWindowTag w selection
 
+-- | Switch to a user-selected workspace, creating it if it does not exist.
 selectWorkspace :: X ()
 selectWorkspace = chooseWorkspace fzfMenu fzfSelectArgs >>= goToWorkspace
 
@@ -86,12 +90,15 @@ renameCurrentWorkspace ws = do
   gets (currentTag . windowset) >>= flip updateName ws
   windows $ setCurrentTag ws . removeWorkspaceWithoutRefresh ws
 
+-- | Remove the current workspace.
 removeWorkspace :: X ()
 removeWorkspace = removeWorkspaceWhen (const True)
 
+-- | Remove the current workspace if it is empty.
 removeWorkspaceIfEmpty :: X ()
 removeWorkspaceIfEmpty = removeWorkspaceWhen $ null . integrate' . stack
 
+-- | Remove the current workspace if it matches the given predicate.
 removeWorkspaceWhen :: (WindowSpace -> Bool) -> X ()
 removeWorkspaceWhen predicate = do
   ws <- gets $ workspace . current . windowset
@@ -99,6 +106,11 @@ removeWorkspaceWhen predicate = do
     DW.removeWorkspace
     removeName $ tag ws
 
+-- | Remove a hidden workspace by its name, merging its stack with that of the
+-- current workspace. If no workspace with the given name exists, do nothing.
+--
+-- This transformation is useful mainly when renaming a workspace to a name
+-- already used by another, restoring all windows from the old workspace.
 removeWorkspaceWithoutRefresh :: WorkspaceId -> WindowSet -> WindowSet
 removeWorkspaceWithoutRefresh name wset = newWindowSet
   where targetWS = find ((== name) . tag) $ hidden wset
