@@ -53,7 +53,7 @@ instance LayoutModifier HideNAt Window where
     hiddenW <- getHiddenIn wksp
 
     let willHideWindow = length visibleWindows > at
-        willUnhideWindow = length hiddenW > 1 && length visibleWindows < at
+        willUnhideWindow = not (null hiddenW) && length visibleWindows < at
         stackToBeTiled | willHideWindow = deleteNthElem n (W.stack wksp)
                        | willUnhideWindow = prepend (rightmost hiddenW) (W.stack wksp)
                        | otherwise = W.stack wksp
