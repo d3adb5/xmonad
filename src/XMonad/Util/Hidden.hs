@@ -15,6 +15,7 @@ module XMonad.Util.Hidden
   , setHidden
   , setNotHidden
   , getHidden
+  , getHiddenIn
   , withHidden
   ) where
 
@@ -58,6 +59,9 @@ setHiddenState window state cons = do
     wstate <- fromMaybe [] <$> getProp32 wm_state window
     io $ changeProperty32 display window wm_state aTOM propModeReplace
       (cons hidden wstate)
+
+getHiddenIn ws = let workspaceWindows = W.integrate' (W.stack ws)
+  in S.filter (`elem` workspaceWindows) <$> XS.gets hiddenWindows
 
 getHidden :: X (S.Seq Window)
 getHidden = withHidden return

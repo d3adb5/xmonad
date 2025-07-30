@@ -50,7 +50,7 @@ instance LayoutModifier HideNAt Window where
 
   modifyLayout (HideNAt n at) wksp rect = do
     let visibleWindows = W.integrate' (W.stack wksp)
-    hiddenW <- getHidden
+    hiddenW <- getHiddenIn wksp
 
     let willHideWindow = length visibleWindows > at
         willUnhideWindow = length hiddenW > 1 && length visibleWindows < at
