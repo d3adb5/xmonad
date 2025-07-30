@@ -17,6 +17,7 @@ import XMonad.Layout.LayoutModifier
 import qualified XMonad.Layout.BoringWindows as BW
 
 import Control.Monad (when)
+import qualified Data.Map as M
 import Data.Foldable (toList)
 import Data.Sequence ((<|))
 
@@ -49,10 +50,10 @@ instance LayoutModifier HideNAt Window where
   modifierDescription (HideNAt n at) = "Hide " ++ show n ++ " at " ++ show at
 
   modifyLayout (HideNAt n at) wksp rect = do
-    let visibleWindows = W.integrate' (W.stack wksp)
+    floating <- withWindowSet $ return . M.keys . W.floating
     hiddenW <- getHiddenIn wksp
-
-    let willHideWindow = length visibleWindows > at
+    let visibleWindows = W.integrate' $ W.filter (`notElem` floating) =<< W.stack wksp
+        willHideWindow = length visibleWindows > at
         willUnhideWindow = not (null hiddenW) && length visibleWindows < at
         stackToBeTiled | willHideWindow = deleteNthElem n (W.stack wksp)
                        | willUnhideWindow = prepend (rightmost hiddenW) (W.stack wksp)
