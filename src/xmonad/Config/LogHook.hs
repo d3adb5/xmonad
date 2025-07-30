@@ -4,7 +4,7 @@ import XMonad hiding (logHook)
 import XMonad.Actions.Hidden (avoidHiddenFocus)
 import XMonad.Actions.UpdatePointer
 import XMonad.Hooks.DynamicLog
-import XMonad.Util.Hidden (withHidden)
+import XMonad.Util.Hidden (getHiddenHere)
 import XMonad.Util.SpawnNamedPipe
 
 import qualified XMonad.StackSet as W
@@ -26,7 +26,7 @@ barPP = def
   , ppExtras = [ hiddenNum ]
   }
   where
-    hiddenNum = withHidden $ return . catchZero . length
+    hiddenNum = catchZero . length <$> getHiddenHere
     catchZero l = if l == 0 then Nothing else Just $ replicate l '•'
 
 logHook :: X ()

@@ -1,18 +1,18 @@
--- TODO: fix hideWindow(AndAct) behavior, maybe add hideWindowWith
-
 module XMonad.Actions.Hidden
   ( hideWindow
+  , hideWindowThen
+  , hideWindowInThen
   , unhideWindow
-  , hideWindowAndAct
-  , unhideWindowAndAct
-  , unhideWindowAndWindows
+  , unhideWindowThen
+  , unhideWindowThenRefresh
+  , unhideWindowInThen
   , avoidHiddenFocus
-  , swapWithLastHidden
-  , swapWithNextHidden
+  , swapWithHidden
   , withLastHidden
-  , withNextHidden
-  , rightmost
-  , leftmost
+  , Direction(..)
+  , peekOn
+  , peekOn'
+  , insertOn
   ) where
 
 import XMonad
@@ -21,87 +21,100 @@ import XMonad.Util.Hidden
 import qualified XMonad.Layout.BoringWindows as BW
 import qualified XMonad.StackSet as W
 
-import Control.Monad (when)
 import Data.Map (notMember)
-import Data.Maybe (listToMaybe)
+import Data.Maybe (fromMaybe)
 import qualified Data.Sequence as S
+import Safe (headMay)
 
-hideWindowAndAct :: InsertFunc -> Window -> X () -> X ()
-hideWindowAndAct ins win act =
-  whenX (modified $ ins win) $ do
-    setHidden win
-    act
+-- | Simple semantic mapping for 'S.Seq' operations.
+data Direction = L | R
 
-unhideWindowAndAct :: Window -> X () -> X ()
-unhideWindowAndAct win act =
-  whenX (modified $ delete win) $ do
-    setNotHidden win
-    broadcastMessage BW.UpdateBoring
-    act
-
-unhideWindowAndWindows :: Window -> (WindowSet -> WindowSet) -> X ()
-unhideWindowAndWindows win mws = unhideWindowAndAct win (windows mws)
-
--- | Append to the right end of the queue, away from the left end where the
--- autohide layout both hides and unhides (most recently hidden first, so a
--- closed master is replaced by its predecessor). Inserting left instead would
--- get the window pulled straight back out by the refresh this action
--- triggers; the right end is also what 'withLastHidden' retrieves.
+-- | Hide a visible window and refresh.
 hideWindow :: Window -> X ()
-hideWindow win = hideWindowAndAct (flip (S.|>)) win $ do
+hideWindow w = hideWindowThen R w $ windows (W.sink w)
+
+-- | Hide a visible window and perform an 'X' action afterwards.
+hideWindowThen :: Direction -> Window -> X () -> X ()
+hideWindowThen d w a = currentWorkspace >>= flip (hideWindowInThen d w) a
+
+-- | Hide a visible window and perform an 'X' action afterwards.
+hideWindowInThen :: Workspace w => Direction -> Window -> w -> X () -> X ()
+hideWindowInThen d w ws action = whenX (not <$> isHidden w) $ do
+  modifyHiddenIn ws $ insertOn d w
   BW.focusDown
-  windows $ W.sink win
+  action
 
+-- | Unhide a window and swap it with the current master window.
 unhideWindow :: Window -> X ()
-unhideWindow win = unhideWindowAndWindows win (W.swapMaster . W.focusWindow win)
+unhideWindow w = unhideWindowThenRefresh w (W.swapMaster . W.focusWindow w)
 
-swapWithHidden :: Window -> Window -> InsertFunc -> X ()
-swapWithHidden uwin hwin insf =
-  whenX (not . null <$> getHiddenHere <&&> runQuery isMasterTile uwin) $
-    hideWindowAndAct insf uwin $ unhideWindowAndWindows hwin $
-      W.swapMaster . W.sink uwin . W.focusWindow hwin
+-- | Unhide a window, modify the 'WindowSet' and refresh the display.
+unhideWindowThenRefresh :: Window -> (WindowSet -> WindowSet) -> X ()
+unhideWindowThenRefresh w mws = unhideWindowThen w $ windows mws
 
-swapWithLastHidden :: Window -> X ()
-swapWithLastHidden w = withLastHidden $ flip (swapWithHidden w) (S.<|)
+-- | Unhide a hidden window and perform an 'X' action afterwards.
+unhideWindowThen :: Window -> X () -> X ()
+unhideWindowThen w a = currentWorkspace >>= flip (unhideWindowInThen w) a
 
-swapWithNextHidden :: Window -> X ()
-swapWithNextHidden w = withNextHidden $ flip (swapWithHidden w) (flip (S.|>))
-
-withLastHidden :: (Window -> X a) -> X a
-withLastHidden = withHidden . (. rightmost)
-
-withNextHidden :: (Window -> X a) -> X a
-withNextHidden = withHidden . (. leftmost)
+-- | Unhide a hidden window and perform an 'X' action afterwards.
+unhideWindowInThen :: Workspace w => Window -> w -> X () -> X ()
+unhideWindowInThen w ws action = whenX (isHidden w) $ do
+  modifyHiddenIn ws $ delete w
+  broadcastMessage BW.UpdateBoring
+  action
 
 -- | Hidden windows should never hold focus, but focus inherited from a closed
 -- or dismissed window can land on one, since hidden windows remain in the
 -- stack. Pass such accidental focus on to the first visible tile (the master)
--- rather than unhiding; intentionally focusing a hidden window should instead
--- go through 'unhideWindow' and friends.
+-- instead of unhiding: were the hidden window given focus intentionally, it
+-- should have gone through 'unhideWindow' and friends. Focus resting on an
+-- unmapped window is lost entirely, as the X server rejects the focus request
+-- and pointer events cannot reach a window that is not viewable.
 avoidHiddenFocus :: X ()
-avoidHiddenFocus = withFocused $ \fwin -> do
-  hiddenW <- getHidden
-  when (fwin `elem` hiddenW) $ do
+avoidHiddenFocus = withFocused $ \fw ->
+  whenX (isHiddenHere fw) $ do
+    hiddenW <- getHiddenHere
     visible <- withWindowSet $ \ws -> return $
-      filter (\w -> w `notElem` hiddenW && w `notMember` W.floating ws) (W.index ws)
-    whenJust (listToMaybe visible) (windows . W.focusWindow)
+      filter (\w -> notElem w hiddenW && notMember w (W.floating ws)) (W.index ws)
+    whenJust (headMay visible) (windows . W.focusWindow)
 
--- these shall fail if the sequence is empty, but we expect that never to happen
-leftmost  :: (Eq a) => S.Seq a -> a
-rightmost :: (Eq a) => S.Seq a -> a
-leftmost s  | (l S.:< _) <- S.viewl s = l
-            | otherwise = error "empty sequence"
-rightmost s | (_ S.:> r) <- S.viewr s = r
-            | otherwise = error "empty sequence"
+-- | Swap the master window with a hidden one.
+swapWithHidden :: Direction -> Window -> X ()
+swapWithHidden d w = whenX (hiddenHereNotNull <&&> runQuery isMasterTile w) $ do
+  target <- peekOn d <$> getHiddenHere
+  hideWindowThen d w $ unhideWindowThenRefresh target $
+    W.swapMaster . W.sink w . W.focusWindow target
 
--- this won't fail at all, but yeah, I just needed a delete
+-- | Perform an action with the last hidden window, if any.
+withLastHidden :: (Window -> X ()) -> X ()
+withLastHidden a = whenX hiddenHereNotNull $ peekOn R <$> getHiddenHere >>= a
+
+-- | Insert a window into a 'S.Seq' at an end based on the direction.
+insertOn :: Direction -> Window -> S.Seq Window -> S.Seq Window
+insertOn R = flip (S.|>)
+insertOn L = (S.<|)
+
+-- | Peek at the first or last element of a 'S.Seq' unsafely.
+peekOn :: Direction -> S.Seq a -> a
+peekOn d s = fromMaybe (error "no hidden wins") $ peekOn' d s
+
+-- | Peek at the first or last element of a 'S.Seq' without removing it.
+peekOn' :: Direction -> S.Seq a -> Maybe a
+peekOn' L s | (l S.:< _) <- S.viewl s = Just l
+            | otherwise = Nothing
+peekOn' R s | (_ S.:> r) <- S.viewr s = Just r
+            | otherwise = Nothing
+
+-- | Delete an element from a 'S.Seq'.
 delete :: (Eq a) => a -> S.Seq a -> S.Seq a
 delete x = S.filter (/= x)
 
--- a query to determine whether a window is tile AND the master window
+-- | Whether there are hidden windows in the current workspace.
+hiddenHereNotNull :: X Bool
+hiddenHereNotNull = not . S.null <$> getHiddenHere
+
+-- A query to determine whether a window is tile AND the master window
 isMasterTile :: Query Bool
-isMasterTile = ask >>= \win -> liftX . withWindowSet $ \ws ->
-  let floats = W.floating ws
-      tiled = filter (`notMember` floats) $ W.index ws
-      master = head tiled
-  in return (win == master)
+isMasterTile = ask >>= \win -> liftX . withWindowSet $ \ws -> do
+  let tiled = filter (`notMember` W.floating ws) $ W.index ws
+  return . fromMaybe False $ (win ==) <$> headMay tiled
