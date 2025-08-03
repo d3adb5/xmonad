@@ -53,13 +53,14 @@ setNotHidden window = setHiddenState window normalState L.delete
 
 setHiddenState :: Window -> Int -> (CLong -> [CLong] -> [CLong]) -> X ()
 setHiddenState window state cons = do
-  setWMState window state
-  withDisplay $ \display -> do
-    wm_state <- getAtom "_NET_WM_STATE"
-    hidden <- fromIntegral <$> getAtom "_NET_WM_STATE_HIDDEN"
-    wstate <- fromMaybe [] <$> getProp32 wm_state window
-    io $ changeProperty32 display window wm_state aTOM propModeReplace
-      (cons hidden wstate)
+  return ()
+  -- setWMState window state
+  -- withDisplay $ \display -> do
+  --   wm_state <- getAtom "_NET_WM_STATE"
+  --   hidden <- fromIntegral <$> getAtom "_NET_WM_STATE_HIDDEN"
+  --   wstate <- fromMaybe [] <$> getProp32 wm_state window
+  --   io $ changeProperty32 display window wm_state aTOM propModeReplace
+  --     (cons hidden wstate)
 
 getHiddenHere :: X (S.Seq Window)
 getHiddenHere = getHiddenIn =<< withWindowSet (return . W.workspace . W.current)
