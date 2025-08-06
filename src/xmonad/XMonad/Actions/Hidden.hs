@@ -31,7 +31,9 @@ data Direction = L | R
 
 -- | Hide a visible window and refresh.
 hideWindow :: Window -> X ()
-hideWindow w = hideWindowThen R w $ windows (W.sink w)
+hideWindow w = hideWindowThen R w $ do
+  BW.focusDown
+  windows (W.sink w)
 
 -- | Hide a visible window and perform an 'X' action afterwards.
 hideWindowThen :: Direction -> Window -> X () -> X ()
@@ -41,7 +43,6 @@ hideWindowThen d w a = currentWorkspace >>= flip (hideWindowInThen d w) a
 hideWindowInThen :: Workspace w => Direction -> Window -> w -> X () -> X ()
 hideWindowInThen d w ws action = whenX (not <$> isHidden w) $ do
   modifyHiddenIn ws $ insertOn d w
-  BW.focusDown
   action
 
 -- | Unhide a window and swap it with the current master window.
