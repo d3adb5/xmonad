@@ -67,7 +67,8 @@ withNextHidden :: (Window -> X a) -> X a
 withNextHidden = withHidden . (. leftmost)
 
 unhideOnFocus :: X ()
-unhideOnFocus = withFocused $ \fwin ->
+unhideOnFocus = withFocused $ \fwin -> do
+  setNotHidden fwin
   whenX (elem fwin <$> getHidden) $
     unhideWindowAndWindows fwin W.swapMaster
 
