@@ -83,12 +83,17 @@ avoidHiddenFocus = withFocused $ \fw ->
 swapWithHidden :: Direction -> Window -> X ()
 swapWithHidden d w = whenX (hiddenHereNotNull <&&> runQuery isMasterTile w) $ do
   target <- peekOn d <$> getHiddenHere
-  hideWindowThen d w $ unhideWindowThenRefresh target $
+  hideWindowThen (invert d) w $ unhideWindowThenRefresh target $
     W.swapMaster . W.sink w . W.focusWindow target
 
 -- | Perform an action with the last hidden window, if any.
 withLastHidden :: (Window -> X ()) -> X ()
 withLastHidden a = whenX hiddenHereNotNull $ peekOn R <$> getHiddenHere >>= a
+
+-- | Invert a 'Direction' to its opposite.
+invert :: Direction -> Direction
+invert L = R
+invert R = L
 
 -- | Insert a window into a 'S.Seq' at an end based on the direction.
 insertOn :: Direction -> Window -> S.Seq Window -> S.Seq Window
