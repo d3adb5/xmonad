@@ -12,7 +12,7 @@ import qualified XMonad.Actions.DynamicWorkspaceOrder as DO
 import qualified XMonad.Actions.DynamicWorkspaces as DW
 
 import Control.Monad (when)
-import Data.Maybe (isNothing)
+import Data.Maybe (isNothing, isJust, fromJust)
 import System.IO (hPutStrLn)
 import Text.Printf
 
@@ -31,13 +31,13 @@ barPP = def
 
 logHook :: X ()
 logHook = do
-  Just xmobarHandle <- getNamedPipe "xmopipe"
+  xmobarHandleM <- getNamedPipe "xmopipe"
   unhideOnFocus
   updatePointer (0.5, 0.5) (0.5, 0.5)
   removeWhenEmpty ["gimp", "mpv", "osu"]
   avoidWorkspaces ["NSP"]
-  dynamicLogWithPP $
-    barPP { ppOutput = hPutStrLn xmobarHandle . centerField . words }
+  when (isJust xmobarHandleM) . dynamicLogWithPP $ barPP
+    { ppOutput = hPutStrLn (fromJust xmobarHandleM) . centerField . words }
   where
     centerField [] = error "centerField: empty list"
     centerField (x:xs) = printf "%s %s %s" (concat xs) x (concat xs)
