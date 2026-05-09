@@ -21,11 +21,12 @@ layoutHook
   = lessBorders OnlyScreenFloat
   . boringWindows
   . avoidStruts
-  . onWorkspaces ["chat"] (gridLayout ||| fullLayout ||| threeLayout')
+  . onWorkspaces ["chat"] (gridLayout ||| fullLayout)
   . onWorkspaces ["gimp", "media"] (fullLayout ||| floatLayout)
   . onWorkspaces ["games"] (fullLayout ||| gridLayout ||| floatLayout)
   . onWorkspaces ["float"] (floatLayout ||| gridLayout)
-  $ threeLayout ||| fullLayout ||| gridLayout
+  . onWorkspaces ["more"] (threeLayout' (1/3) ||| fullLayout)
+  $ autohideThreeLayout ||| fullLayout ||| gridLayout
 
 floatLayout
   = normalBorders
@@ -33,14 +34,17 @@ floatLayout
   $ SF 0
 
 gridLayout
-  = normalBorders Grid
+  = normalBorders
+  $ GridRatio (8/9)
 
-threeLayout = hideNAt 2 3 threeLayout'
+autohideThreeLayout = hideNAt 2 3 threeLayout
 
-threeLayout'
+threeLayout = threeLayout' (1/2)
+
+threeLayout' mr
   = reflectHoriz
   . normalBorders
-  $ ThreeColMid 1 (2/100) (1/2)
+  $ ThreeColMid 1 (2/100) mr
 
 fullLayout
   = voidBorders
