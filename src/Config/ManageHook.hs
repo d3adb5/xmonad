@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
-module Config.ManageHook (manageHook, scratchpads) where
+module Config.ManageHook (manageHook, scratchpads, scratchpadToggle) where
 
 import XMonad hiding (manageHook, borderWidth)
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsManageHook)
@@ -13,6 +13,7 @@ import qualified XMonad.Actions.DynamicWorkspaces as DW
 import qualified XMonad.StackSet as W
 
 import Config.Dimensions
+import Control.Monad (filterM)
 import Data.List (singleton)
 import Data.Map (member)
 import Data.Ratio
@@ -61,6 +62,21 @@ centerFloat = do
         offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
                 | otherwise = 0
     in centerRRectOffsetY offsetY addedWidthRatio addedHeightRatio
+
+-- | Toggle the scratchpad. When showing, silently rewrite its floating rect
+-- against the focused screen first so the window is mapped at the correct
+-- size from the start (no resize-after-map flash for the compositor).
+scratchpadToggle :: X ()
+scratchpadToggle = do
+  ws <- withWindowSet return
+  hits <- filterM (runQuery (appName =? "scratch")) (W.allWindows ws)
+  case [w | w <- hits, w `notElem` W.index ws] of
+    (w:_) -> screenDimsM >>= \(sw, sh) ->
+      windows $ W.float w (centerIRectOffsetY panelHeight tw th sw sh)
+    _ -> return ()
+  namedScratchpadAction scratchpads "term"
+  where
+    (tw, th) = (columnsToWindowWidth 150, linesToWindowHeight 40)
 
 -- | Shift a window to a given workspace (create it if it doesn't exist) and
 -- make it the current workspace.
