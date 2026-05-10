@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -49,7 +49,8 @@ executable xmonad
       src
   ghc-options: -Wall -Wcompat -Widentities -threaded -rtsopts -with-rtsopts=-N -O2 -j
   build-depends:
-      base >=4.7 && <5
+      X11 >=1.9 && <2
+    , base >=4.7 && <5
     , containers ==0.7.*
     , data-default ==0.8.*
     , extra ==1.*

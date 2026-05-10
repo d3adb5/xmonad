@@ -37,3 +37,4 @@ executables:
     - utility-ht == 0.0.*
     - xmonad >= 0.18
     - xmonad-contrib >= 0.18
+    - X11 >= 1.9 && < 2
