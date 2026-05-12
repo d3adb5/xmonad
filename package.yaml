@@ -1,14 +1,14 @@
-name:        xmonad-d3adb5
+name:        desktop-d3adb5
 version:     0.1.0
-github:      d3adb5/dotfiles
+github:      d3adb5/xmonad
 license:     WTFPL
 author:      d3adb5
 maintainer:  me@d3adb5.net
 copyright:   2023 d3adb5
 
-synopsis:    d3adb5's xmonad configuration
+synopsis:    d3adb5's desktop environment configuration
 category:    System
-description: Please see the README on GitHub at <https://github.com/d3adb5/dotfiles#readme>
+description: Please see the README on GitHub at <https://github.com/d3adb5/xmonad#readme>
 
 ghc-options:
 - -Wall
@@ -18,7 +18,7 @@ ghc-options:
 executables:
   xmonad:
     main: xmonad.hs
-    source-dirs: src
+    source-dirs: src/xmonad
     ghc-options:
     - -threaded
     - -rtsopts
@@ -38,3 +38,16 @@ executables:
     - xmonad >= 0.18
     - xmonad-contrib >= 0.18
     - X11 >= 1.9 && < 2
+
+  xmobar:
+    main: xmobar.hs
+    source-dirs: src/xmobar
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    - -j
+    dependencies:
+    - base >= 4.7 && < 5
+    - xmobar

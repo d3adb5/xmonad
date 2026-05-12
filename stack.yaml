@@ -1,3 +1,14 @@
 resolver: lts-24.39
 packages:
   - "."
+
+flags:
+  xmobar:
+    with_datezone: true
+    with_threaded: true
+    with_xpm: true
+    with_xft: true
+
+extra-deps:
+  - git: https://github.com/d3adb5/xmobar-xft.git
+    commit: "2b601edac7c9009a151a36733f6b9a8c68eed384"

@@ -1,0 +1,36 @@
+import Xmobar
+
+main :: IO ()
+main = xmobar $ defaultConfig
+  { font = "xft:DejaVu Sans Mono:size=9.1,IPAGothic:size=9.1,Baekmuk Dotum:size=9.1,Unifont:size=9.1"
+
+  , borderColor = "#656565"
+  , border      = BottomB
+  , borderWidth = 2
+
+  , bgColor = "#1d1f21"
+  , fgColor = "#c5c8c6"
+
+  , position = TopH 20
+  , pickBroadest = True
+
+  , commands =
+      [ Run $ DateZone "%A, %m月 %d日 ~ %H:%M" "ja_JP.UTF-8" "" "date" 10
+      , Run UnsafeStdinReader
+      , Run $ Cpu ["-t", "<total>%", "-c", "0", "-w", "2", "-M", "3"] 10
+      , Run $ Memory ["-t", "<usedratio>%", "-c", "0", "-w", "2", "-M", "3"] 10
+      ]
+
+  , sepChar = "%"
+  , alignSep = "}{"
+  , template = " \
+      \<icon=.local/share/icons/xpm/cpu.xpm/> %cpu% \
+      \<icon=.local/share/icons/xpm/mem.xpm/> %memory% \
+      \<icon=.local/share/icons/xpm/vbar.xpm/> \
+      \}%UnsafeStdinReader%{ \
+      \<icon=.local/share/icons/xpm/vbar.xpm/> \
+      \<icon=.local/share/icons/xpm/date.xpm/> %date% \
+      \<icon=.local/share/icons/xpm/vbar.xpm/> \
+      \<action=`kill -s USR1 $(pidof deadd-notification-center)`>\
+      \<icon=.local/share/icons/xpm/notification.xpm/> </action>"
+  }
