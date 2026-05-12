@@ -10,7 +10,6 @@ import XMonad.Actions.FloatKeys (keysMoveWindowTo)
 import XMonad.Actions.Hidden
 import XMonad.Actions.PhysicalScreens
 import XMonad.Layout.BoringWindows (focusDown, focusUp)
-import XMonad.Util.NamedScratchpad
 
 import qualified Config.ManageHook as MH
 import qualified XMonad.StackSet as W
@@ -32,7 +31,7 @@ keyBindings =
   , ("M-M1-j", withFocused swapWithNextHidden)
   , ("M-M1-k", withFocused swapWithLastHidden)
   , ("M-M1-l", withLastHidden unhideWindow)
-  , ("M-[", namedScratchpadAction MH.scratchpads "term")
+  , ("M-[", MH.scratchpadToggle)
   , ("M-C-y", withFocused copyToWorkspace)
   , ("M-<Backspace>", kill1)
   , ("M-S-y", withFocused $ moveToWorkspace)

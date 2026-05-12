@@ -1,0 +1,14 @@
+cradle:
+  multi:
+    - path: "src/xmonad"
+      config:
+        cradle:
+          stack:
+            stackYaml: "./stack.yaml"
+            component: "desktop-d3adb5:exe:xmonad"
+    - path: "src/xmobar"
+      config:
+        cradle:
+          stack:
+            stackYaml: "./stack.yaml"
+            component: "desktop-d3adb5:exe:xmobar"

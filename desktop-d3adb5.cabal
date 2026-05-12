@@ -1,16 +1,16 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
-name:           xmonad-d3adb5
+name:           desktop-d3adb5
 version:        0.1.0
-synopsis:       d3adb5's xmonad configuration
-description:    Please see the README on GitHub at <https://github.com/d3adb5/dotfiles#readme>
+synopsis:       d3adb5's desktop environment configuration
+description:    Please see the README on GitHub at <https://github.com/d3adb5/xmonad#readme>
 category:       System
-homepage:       https://github.com/d3adb5/dotfiles#readme
-bug-reports:    https://github.com/d3adb5/dotfiles/issues
+homepage:       https://github.com/d3adb5/xmonad#readme
+bug-reports:    https://github.com/d3adb5/xmonad/issues
 author:         d3adb5
 maintainer:     me@d3adb5.net
 copyright:      2023 d3adb5
@@ -19,7 +19,21 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: https://github.com/d3adb5/dotfiles
+  location: https://github.com/d3adb5/xmonad
+
+executable xmobar
+  main-is: xmobar.hs
+  other-modules:
+      Paths_desktop_d3adb5
+  autogen-modules:
+      Paths_desktop_d3adb5
+  hs-source-dirs:
+      src/xmobar
+  ghc-options: -Wall -Wcompat -Widentities -threaded -rtsopts -with-rtsopts=-N -O2 -j
+  build-depends:
+      base >=4.7 && <5
+    , xmobar
+  default-language: Haskell2010
 
 executable xmonad
   main-is: xmonad.hs
@@ -42,14 +56,15 @@ executable xmonad
       XMonad.Util.Hidden
       XMonad.Util.MenuPrompts
       XMonad.Util.WindowTags
-      Paths_xmonad_d3adb5
+      Paths_desktop_d3adb5
   autogen-modules:
-      Paths_xmonad_d3adb5
+      Paths_desktop_d3adb5
   hs-source-dirs:
-      src
+      src/xmonad
   ghc-options: -Wall -Wcompat -Widentities -threaded -rtsopts -with-rtsopts=-N -O2 -j
   build-depends:
-      base >=4.7 && <5
+      X11 >=1.9 && <2
+    , base >=4.7 && <5
     , containers ==0.7.*
     , data-default ==0.8.*
     , extra ==1.*

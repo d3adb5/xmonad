@@ -1,4 +1,5 @@
-module Config.ManageHook (manageHook, scratchpads) where
+{-# OPTIONS_GHC -Wno-type-defaults #-}
+module Config.ManageHook (manageHook, scratchpads, scratchpadToggle) where
 
 import XMonad hiding (manageHook, borderWidth)
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsManageHook)
@@ -12,6 +13,7 @@ import qualified XMonad.Actions.DynamicWorkspaces as DW
 import qualified XMonad.StackSet as W
 
 import Config.Dimensions
+import Control.Monad (filterM)
 import Data.List (singleton)
 import Data.Map (member)
 import Data.Ratio
@@ -42,23 +44,39 @@ manageHook = composeAll
       , ("WM_WINDOW_ROLE", "file-png") ]
 
 scratchpads :: [NamedScratchpad]
-scratchpads = singleton $ NS name command query hook
+scratchpads = singleton $ NS name command query (liftX screenDimsM >>= hook')
   where command = "st -n scratch -t scratch -e tmux new -A -s scratch"
-        hook = customFloating $ centerIRectOffsetY panelHeight tw th sw sh
+        hook' (w, h) = customFloating $ centerIRectOffsetY panelHeight tw th w h
         (tw, th) = (columnsToWindowWidth 150, linesToWindowHeight 40)
-        (sw, sh) = (screenWidth, screenHeight) :: (Int, Int)
         query = appName =? "scratch"
         name = "term"
 
 -- | Properly center a floating window in the available screen real estate.
 centerFloat :: ManageHook
-centerFloat = doFloatDep $ \(W.RationalRect _ _ widthRatio heightRatio) ->
-  let addedWidthRatio = widthRatio + 2 * (borderWidth % screenWidth)
-      addedHeightRatio = heightRatio + 2 * (borderWidth % screenHeight)
-      panelHeightRatio = panelHeight % screenHeight
-      offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
-              | otherwise = 0
-  in centerRRectOffsetY offsetY addedWidthRatio addedHeightRatio
+centerFloat = do
+  (scrWidth, scrHeight) <- liftX screenDimsM
+  doFloatDep $ \(W.RationalRect _ _ widthRatio heightRatio) ->
+    let addedWidthRatio = widthRatio + 2 * (borderWidth % scrWidth)
+        addedHeightRatio = heightRatio + 2 * (borderWidth % scrHeight)
+        panelHeightRatio = panelHeight % scrHeight
+        offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
+                | otherwise = 0
+    in centerRRectOffsetY offsetY addedWidthRatio addedHeightRatio
+
+-- | Toggle the scratchpad. When showing, silently rewrite its floating rect
+-- against the focused screen first so the window is mapped at the correct
+-- size from the start (no resize-after-map flash for the compositor).
+scratchpadToggle :: X ()
+scratchpadToggle = do
+  ws <- withWindowSet return
+  hits <- filterM (runQuery (appName =? "scratch")) (W.allWindows ws)
+  case [w | w <- hits, w `notElem` W.index ws] of
+    (w:_) -> screenDimsM >>= \(sw, sh) ->
+      windows $ W.float w (centerIRectOffsetY panelHeight tw th sw sh)
+    _ -> return ()
+  namedScratchpadAction scratchpads "term"
+  where
+    (tw, th) = (columnsToWindowWidth 150, linesToWindowHeight 40)
 
 -- | Shift a window to a given workspace (create it if it doesn't exist) and
 -- make it the current workspace.

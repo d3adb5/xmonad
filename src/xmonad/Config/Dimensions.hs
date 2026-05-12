@@ -1,9 +1,25 @@
 {-# OPTIONS_GHC -Wno-missing-signatures -Wno-type-defaults #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Config.Dimensions where
 
+import XMonad (X, Rectangle, withWindowSet, screenRect, rect_width, rect_height)
+import XMonad.StackSet (screenDetail, current)
+
 import Data.Ratio
+
+fi = fromIntegral
+
+currentScreenRect :: X Rectangle
+currentScreenRect = withWindowSet $ return . screenRect . screenDetail . current
+
+screenWidthM, screenHeightM :: Integral a => X a
+screenWidthM = fi . rect_width <$> currentScreenRect
+screenHeightM = fi . rect_height <$> currentScreenRect
+
+screenDimsM :: Integral a => X (a, a)
+screenDimsM = (,) <$> screenWidthM <*> screenHeightM
 
 (screenWidth, screenHeight) = (2560, 1080)
 (characterWidth, characterHeight) =  (6, 12)
