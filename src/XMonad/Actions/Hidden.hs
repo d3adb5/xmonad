@@ -50,7 +50,7 @@ unhideWindow win = unhideWindowAndWindows win (W.swapMaster . W.focusWindow win)
 
 swapWithHidden :: Window -> Window -> InsertFunc -> X ()
 swapWithHidden uwin hwin insf =
-  whenX (runQuery isMasterTile uwin) $
+  whenX (not . null <$> getHiddenHere <&&> runQuery isMasterTile uwin) $
     hideWindowAndAct insf uwin $ unhideWindowAndWindows hwin $
       W.swapMaster . W.sink uwin . W.focusWindow hwin
 
@@ -67,7 +67,8 @@ withNextHidden :: (Window -> X a) -> X a
 withNextHidden = withHidden . (. leftmost)
 
 unhideOnFocus :: X ()
-unhideOnFocus = withFocused $ \fwin ->
+unhideOnFocus = withFocused $ \fwin -> do
+  setNotHidden fwin
   whenX (elem fwin <$> getHidden) $
     unhideWindowAndWindows fwin W.swapMaster
 

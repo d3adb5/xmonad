@@ -30,6 +30,7 @@ import Data.Char (toUpper)
 import Data.List.Split (splitOneOf)
 import Data.Set (toList)
 import Data.Tuple.Extra (both)
+import Safe (lastDef)
 import System.IO hiding (hGetContents)
 import System.IO.Strict (hGetContents)
 import System.Process (runInteractiveProcess)
@@ -50,7 +51,7 @@ runProcess cmd args input = io $ do
 -- of options that are fed through stdin as separate lines. The last line of the
 -- output is returned as a single string, with trailing newlines removed.
 runMenu :: String -> [String] -> [String] -> X String
-runMenu mcmd args opts = filter (/= '\n') . last <$>
+runMenu mcmd args opts = filter (/= '\n') . lastDef "" <$>
   runProcess mcmd args (unlines opts)
 
 -- | Prompts the user to choose a workspace from all workspaces in the
