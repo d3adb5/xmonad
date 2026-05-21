@@ -5,8 +5,8 @@ import XMonad (Full(..), (|||))
 import XMonad.Layout.BoringWindows
 import XMonad.Layout.Grid
 import XMonad.Layout.Hidden
-import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
+import XMonad.Layout.ScreenFloatBorders
 import XMonad.Layout.Reflect
 import XMonad.Layout.SimpleFloat (SimpleFloat(..))
 import XMonad.Layout.Spacing hiding (windowBorder)
@@ -18,7 +18,7 @@ import XMonad.Hooks.ManageDocks (avoidStruts)
 import qualified Config.Dimensions as D
 
 layoutHook
-  = lessBorders OnlyScreenFloat
+  = screenFloatBorders
   . boringWindows
   . avoidStruts
   . onWorkspaces ["chat"] (gridLayout ||| fullLayout)

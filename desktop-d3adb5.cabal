@@ -51,6 +51,7 @@ executable xmonad
       XMonad.Layout.BoringFloats
       XMonad.Layout.Hidden
       XMonad.Layout.HiddenQueueLayout
+      XMonad.Layout.ScreenFloatBorders
       XMonad.Layout.VoidBorders
       XMonad.Util.CenterRationalRect
       XMonad.Util.Hidden
