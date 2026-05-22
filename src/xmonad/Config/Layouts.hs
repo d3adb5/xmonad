@@ -22,8 +22,8 @@ layoutHook
   . boringWindows
   . avoidStruts
   . onWorkspaces ["chat"] (gridLayout ||| fullLayout)
-  . onWorkspaces ["gimp", "media"] (fullLayout ||| floatLayout)
-  . onWorkspaces ["games"] (fullLayout ||| gridLayout ||| floatLayout)
+  . onWorkspaces ["gimp", "media"] (fullLayout ||| gridLayout)
+  . onWorkspaces ["games"] (fullLayout ||| gridLayout)
   . onWorkspaces ["float"] (floatLayout ||| gridLayout)
   . onWorkspaces ["more"] (threeLayout' (1/3) ||| fullLayout)
   $ autohideThreeLayout ||| fullLayout ||| gridLayout
