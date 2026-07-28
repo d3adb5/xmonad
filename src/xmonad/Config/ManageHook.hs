@@ -23,7 +23,7 @@ manageHook :: ManageHook
 manageHook = composeAll
   [ namedScratchpadManageHook scratchpads
   , ewmhDesktopsManageHook
-  , classNameIn' dcClassNames --> moveToWorkspace "chat"
+  , classNameIn' chatClassNames --> moveToWorkspace "chat"
   , classNameIn' mediaClassNames --> moveToWorkspace "media"
   , className' =? "Gimp" --> moveToWorkspace "gimp"
   , composeOne $ hookClassNames' centerFloat floatClassNames
@@ -35,7 +35,7 @@ manageHook = composeAll
   where
     mediaClassNames = ["Spotify", "plexmediaplayer"]
     gameClassNames = ["steam"]
-    dcClassNames = ["discord"]
+    chatClassNames = ["discord", "mumble"]
     floatPropValues =
       [ ("WM_WINDOW_ROLE", "GtkFileChooserDialog")
       , ("WM_WINDOW_ROLE", "gimp-message-dialog")
