@@ -19,6 +19,7 @@ import qualified XMonad.Layout.BoringWindows as BW
 import Control.Monad (msum, when)
 import qualified Data.Map as M
 import Data.Foldable (toList)
+import Data.Maybe (listToMaybe)
 import Data.Sequence ((<|))
 import qualified Data.Sequence as S
 
@@ -65,7 +66,10 @@ instance LayoutModifier HideNAt Window where
                          filter (\w -> w `elem` visibleWindows || w == unhideTarget) realWindows
                        | otherwise = W.stack wksp
 
-    when willUnhideWindow $ unhideWindowAndAct unhideTarget (pure ())
+    when willUnhideWindow $ do
+      unhideWindowAndAct unhideTarget (pure ())
+      when (listToMaybe (W.integrate' stackToBeTiled) == Just unhideTarget) $
+        promoteInStack (W.tag wksp) unhideTarget
     when willHideWindow $ hideWindowAndAct (<|) (visibleWindows !! (n - 1)) (pure ())
     runLayout (wksp { W.stack = stackToBeTiled }) rect
 
@@ -75,6 +79,22 @@ instance LayoutModifier HideNAt Window where
 workspaceStackByTag :: WorkspaceId -> X (Maybe (W.Stack Window))
 workspaceStackByTag tag = withWindowSet $ return
   . msum . map W.stack . filter ((== tag) . W.tag) . W.workspaces
+
+-- | Move a window to the top of its workspace's tiled stack, without a refresh
+-- and preserving the focused window. Floating windows stay in place.
+promoteInStack :: WorkspaceId -> Window -> X ()
+promoteInStack tag win = do
+  floats <- withWindowSet $ return . W.floating
+  let reorder rest = let (fs, ts) = span (`M.member` floats) rest in fs ++ win : ts
+      promote ms = ms >>= \s ->
+        if win `elem` W.integrate s
+          then refocus (W.focus s) (reorder (filter (/= win) (W.integrate s)))
+          else Just s
+      refocus f xs = case break (== f) xs of
+        (ups, x:downs) -> Just (W.Stack x (reverse ups) downs)
+        _              -> W.differentiate xs
+  runOnWorkspaces $ \w -> return $
+    if W.tag w == tag then w { W.stack = promote (W.stack w) } else w
 
 deleteNthElem :: Int -> Maybe (W.Stack a) -> Maybe (W.Stack a)
 deleteNthElem n s =
