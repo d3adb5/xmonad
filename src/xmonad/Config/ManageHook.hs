@@ -33,7 +33,6 @@ manageHook = composeAll
                  , isDialog -?> centerFloat ]
   ]
   where
-    floatClassNames = ["Pqiv", "sun-awt-X11-XFramePeer", "Udiskie", "fzfmenu"]
     mediaClassNames = ["Spotify", "plexmediaplayer"]
     gameClassNames = ["steam"]
     dcClassNames = ["discord"]
@@ -43,6 +42,12 @@ manageHook = composeAll
       , ("WM_WINDOW_ROLE", "gimp-toolbox-color-dialog")
       , ("WM_WINDOW_ROLE", "gimp-query-box")
       , ("WM_WINDOW_ROLE", "file-png") ]
+    floatClassNames =
+      [ "Pqiv"
+      , "sun-awt-X11-XFramePeer"
+      , "Udiskie"
+      , "fzfmenu"
+      , "mpv" ]
 
 scratchpads :: [NamedScratchpad]
 scratchpads = singleton $ NS name command query (liftX screenDimsM >>= hook')
