@@ -60,7 +60,7 @@ instance LayoutModifier HideNAt Window where
         visibleWindows = W.integrate' $ W.filter (`notElem` floating) =<< W.stack wksp
         willHideWindow = length visibleWindows > at
         willUnhideWindow = not (null hiddenW) && length visibleWindows < at
-        unhideTarget = rightmost hiddenW
+        unhideTarget = leftmost hiddenW
         stackToBeTiled | willHideWindow = deleteNthElem n (W.stack wksp)
                        | willUnhideWindow = W.differentiate $
                          filter (\w -> w `elem` visibleWindows || w == unhideTarget) realWindows

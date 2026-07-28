@@ -40,6 +40,11 @@ unhideWindowAndAct win act =
 unhideWindowAndWindows :: Window -> (WindowSet -> WindowSet) -> X ()
 unhideWindowAndWindows win mws = unhideWindowAndAct win (windows mws)
 
+-- | Append to the right end of the queue, away from the left end where the
+-- autohide layout both hides and unhides (most recently hidden first, so a
+-- closed master is replaced by its predecessor). Inserting left instead would
+-- get the window pulled straight back out by the refresh this action
+-- triggers; the right end is also what 'withLastHidden' retrieves.
 hideWindow :: Window -> X ()
 hideWindow win = hideWindowAndAct (flip (S.|>)) win $ do
   BW.focusDown
