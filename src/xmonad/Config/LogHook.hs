@@ -1,7 +1,7 @@
 module Config.LogHook (logHook) where
 
 import XMonad hiding (logHook)
-import XMonad.Actions.Hidden (unhideOnFocus)
+import XMonad.Actions.Hidden (avoidHiddenFocus)
 import XMonad.Actions.UpdatePointer
 import XMonad.Hooks.DynamicLog
 import XMonad.Util.Hidden (withHidden)
@@ -32,7 +32,7 @@ barPP = def
 logHook :: X ()
 logHook = do
   xmobarHandleM <- getNamedPipe "xmopipe"
-  unhideOnFocus
+  avoidHiddenFocus
   updatePointer (0.5, 0.5) (0.5, 0.5)
   removeWhenEmpty ["gimp", "mpv", "osu"]
   avoidWorkspaces ["NSP"]

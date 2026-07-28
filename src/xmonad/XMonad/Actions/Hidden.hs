@@ -6,7 +6,7 @@ module XMonad.Actions.Hidden
   , hideWindowAndAct
   , unhideWindowAndAct
   , unhideWindowAndWindows
-  , unhideOnFocus
+  , avoidHiddenFocus
   , swapWithLastHidden
   , swapWithNextHidden
   , withLastHidden
@@ -21,7 +21,9 @@ import XMonad.Util.Hidden
 import qualified XMonad.Layout.BoringWindows as BW
 import qualified XMonad.StackSet as W
 
+import Control.Monad (when)
 import Data.Map (notMember)
+import Data.Maybe (listToMaybe)
 import qualified Data.Sequence as S
 
 hideWindowAndAct :: InsertFunc -> Window -> X () -> X ()
@@ -71,11 +73,18 @@ withLastHidden = withHidden . (. rightmost)
 withNextHidden :: (Window -> X a) -> X a
 withNextHidden = withHidden . (. leftmost)
 
-unhideOnFocus :: X ()
-unhideOnFocus = withFocused $ \fwin -> do
-  setNotHidden fwin
-  whenX (elem fwin <$> getHidden) $
-    unhideWindowAndWindows fwin W.swapMaster
+-- | Hidden windows should never hold focus, but focus inherited from a closed
+-- or dismissed window can land on one, since hidden windows remain in the
+-- stack. Pass such accidental focus on to the first visible tile (the master)
+-- rather than unhiding; intentionally focusing a hidden window should instead
+-- go through 'unhideWindow' and friends.
+avoidHiddenFocus :: X ()
+avoidHiddenFocus = withFocused $ \fwin -> do
+  hiddenW <- getHidden
+  when (fwin `elem` hiddenW) $ do
+    visible <- withWindowSet $ \ws -> return $
+      filter (\w -> w `notElem` hiddenW && w `notMember` W.floating ws) (W.index ws)
+    whenJust (listToMaybe visible) (windows . W.focusWindow)
 
 -- these shall fail if the sequence is empty, but we expect that never to happen
 leftmost  :: (Eq a) => S.Seq a -> a
