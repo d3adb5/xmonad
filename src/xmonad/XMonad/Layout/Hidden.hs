@@ -16,10 +16,11 @@ import XMonad.Util.ExtensibleState as XS
 import XMonad.Layout.LayoutModifier
 import qualified XMonad.Layout.BoringWindows as BW
 
-import Control.Monad (when)
+import Control.Monad (msum, when)
 import qualified Data.Map as M
 import Data.Foldable (toList)
 import Data.Sequence ((<|))
+import qualified Data.Sequence as S
 
 data HiddenL a = HiddenL         deriving (Read, Show)
 data HideNAt a = HideNAt Int Int deriving (Read, Show)
@@ -51,17 +52,29 @@ instance LayoutModifier HideNAt Window where
 
   modifyLayout (HideNAt n at) wksp rect = do
     floating <- withWindowSet $ return . M.keys . W.floating
-    hiddenW <- getHiddenIn wksp
-    let visibleWindows = W.integrate' $ W.filter (`notElem` floating) =<< W.stack wksp
+    realStack <- workspaceStackByTag (W.tag wksp)
+    allHidden <- XS.gets hiddenWindows
+    let realWindows = W.integrate' realStack
+        hiddenW = S.filter (`elem` realWindows) allHidden
+        visibleWindows = W.integrate' $ W.filter (`notElem` floating) =<< W.stack wksp
         willHideWindow = length visibleWindows > at
         willUnhideWindow = not (null hiddenW) && length visibleWindows < at
+        unhideTarget = rightmost hiddenW
         stackToBeTiled | willHideWindow = deleteNthElem n (W.stack wksp)
-                       | willUnhideWindow = prepend (rightmost hiddenW) (W.stack wksp)
+                       | willUnhideWindow = W.differentiate $
+                         filter (\w -> w `elem` visibleWindows || w == unhideTarget) realWindows
                        | otherwise = W.stack wksp
 
-    when willUnhideWindow $ unhideWindowAndAct (rightmost hiddenW) (pure ())
+    when willUnhideWindow $ unhideWindowAndAct unhideTarget (pure ())
     when willHideWindow $ hideWindowAndAct (<|) (visibleWindows !! (n - 1)) (pure ())
     runLayout (wksp { W.stack = stackToBeTiled }) rect
+
+-- | The workspace's stack as it exists in the window set. The stack given to
+-- 'modifyLayout' has already been stripped of hidden windows by 'HiddenL', so
+-- hidden windows (and the true tiling order) are only found in the real stack.
+workspaceStackByTag :: WorkspaceId -> X (Maybe (W.Stack Window))
+workspaceStackByTag tag = withWindowSet $ return
+  . msum . map W.stack . filter ((== tag) . W.tag) . W.workspaces
 
 deleteNthElem :: Int -> Maybe (W.Stack a) -> Maybe (W.Stack a)
 deleteNthElem n s =
@@ -69,8 +82,3 @@ deleteNthElem n s =
       (start, end) = splitAt n listFromStack
       nRemoved = take (n - 1) start ++ end
   in W.differentiate nRemoved
-
-prepend :: a -> Maybe (W.Stack a) -> Maybe (W.Stack a)
-prepend w s =
-  let listFromStack = W.integrate' s
-  in W.differentiate (w : listFromStack)
