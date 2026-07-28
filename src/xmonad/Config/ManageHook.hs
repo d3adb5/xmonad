@@ -15,6 +15,7 @@ import qualified XMonad.StackSet as W
 import Config.Dimensions
 import Control.Monad (filterM)
 import Data.List (singleton)
+import Data.List.Extra (lower)
 import Data.Map (member)
 import Data.Ratio
 
@@ -22,12 +23,12 @@ manageHook :: ManageHook
 manageHook = composeAll
   [ namedScratchpadManageHook scratchpads
   , ewmhDesktopsManageHook
-  , classNameIn dcClassNames --> moveToWorkspace "chat"
-  , classNameIn mediaClassNames --> moveToWorkspace "media"
-  , className =? "Gimp" --> moveToWorkspace "gimp"
-  , composeOne $ hookClassNames centerFloat floatClassNames
+  , classNameIn' dcClassNames --> moveToWorkspace "chat"
+  , classNameIn' mediaClassNames --> moveToWorkspace "media"
+  , className' =? "Gimp" --> moveToWorkspace "gimp"
+  , composeOne $ hookClassNames' centerFloat floatClassNames
               ++ hookPropValues centerFloat floatPropValues
-              ++ hookClassNames (moveToWorkspace "games") gameClassNames
+              ++ hookClassNames' (moveToWorkspace "games") gameClassNames
               ++ [ isTile -?> insertPosition Master Newer
                  , isDialog -?> centerFloat ]
   ]
@@ -86,9 +87,9 @@ moveToWorkspace wkspc = do
   doF (W.greedyView wkspc . W.shift wkspc)
 
 -- | Creates a list of MaybeManageHooks by maybe-hooking class names from a
--- given list to @hook@.
-hookClassNames :: ManageHook -> [String] -> [MaybeManageHook]
-hookClassNames hook = map ((-?> hook) . (className =?))
+-- given list to @hook@. Case insensitive.
+hookClassNames' :: ManageHook -> [String] -> [MaybeManageHook]
+hookClassNames' hook = map ((-?> hook) . (className' =?) . lower)
 
 -- | Creates a list of MaybeManageHooks by querying for property values from a
 -- list of expected property-value pairs and maybe hooking them to @hook@.
@@ -96,9 +97,9 @@ hookPropValues :: ManageHook -> [(String, String)] -> [MaybeManageHook]
 hookPropValues hook = map (\(prop,val) -> stringProperty prop =? val -?> hook)
 
 -- | Determines whether the current window's class name is a member of a given
--- list of possible ones.
-classNameIn :: [String] -> Query Bool
-classNameIn = foldr1 (<||>) . map (className =?)
+-- list of possible ones, but insensitive of case.
+classNameIn' :: [String] -> Query Bool
+classNameIn' = foldr1 (<||>) . map ((className' =?) . lower)
 
 -- | Determines whether the current window is floating.
 isFloat :: Query Bool
@@ -107,3 +108,7 @@ isFloat = ask >>= \w -> liftX . withWindowSet $ return . member w . floating
 -- | Determines whether the current window is being tiled.
 isTile :: Query Bool
 isTile = fmap not isFloat
+
+-- | Class name, but lowercase, to be used in case insensitive queries.
+className' :: Query String
+className' = fmap lower className
