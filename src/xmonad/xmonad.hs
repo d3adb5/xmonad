@@ -1,6 +1,8 @@
 import XMonad
-import XMonad.Hooks.EwmhDesktops (ewmh, ewmhFullscreen)
+import XMonad.Actions.Hidden (unhideWindow)
+import XMonad.Hooks.EwmhDesktops (ewmh, ewmhFullscreen, setEwmhActivateHook)
 import XMonad.Hooks.ManageDocks (docks)
+import XMonad.Hooks.ManageHelpers (doFocus)
 import XMonad.Util.EZConfig
 
 import qualified Config.Bindings as BD
@@ -12,7 +14,7 @@ import qualified Config.ManageHook as MH
 import qualified Config.StartupHook as SH
 
 main :: IO ()
-main = xmonad . ewmhFullscreen . ewmh . docks $ def
+main = xmonad . ewmhFullscreen . focusOnActivate . ewmh . docks $ def
   { terminal           = "st -e tmux"
   , focusFollowsMouse  = True
   , focusedBorderColor = "#a54242"
@@ -29,5 +31,9 @@ main = xmonad . ewmhFullscreen . ewmh . docks $ def
   `additionalKeysP`         BD.keyBindings
   `additionalMouseBindings` BD.mouseBindings
   `removeKeysP`             BD.removedBindings
+
+focusOnActivate :: XConfig l -> XConfig l
+focusOnActivate = setEwmhActivateHook focusHook
+  where focusHook = ask >>= liftX . unhideWindow >> doFocus
 
 -- vim: set ts=2 sw=2 et :

@@ -15,6 +15,7 @@ import XMonad hiding (workspaces)
 import XMonad.StackSet hiding (filter)
 import XMonad.Util.MenuPrompts
 import XMonad.Actions.CopyWindow (copyWindow)
+import XMonad.Actions.Hidden (unhideWindow)
 import XMonad.Actions.DynamicWorkspaceOrder (updateName, removeName)
 
 import qualified XMonad.Actions.DynamicWorkspaces as DW
@@ -40,9 +41,12 @@ sendToWorkspace w ws = do
     DW.addWorkspace ws
   windows $ greedyView ws . shiftWin ws w
 
--- | Focus a user-selected window from all of those available.
+-- | Focus a user-selected window from all of those available. Unhides the
+-- window first if it is hidden, since focus may not rest on hidden windows.
 selectWindow :: X ()
-selectWindow = chooseWindow fzfMenu fzfWindowArgs >>= windows . focusWindow
+selectWindow = chooseWindow fzfMenu fzfWindowArgs >>= \w -> do
+  unhideWindow w
+  windows $ focusWindow w
 
 -- | Add a user-defined tag to a window. Current tags are shown.
 addWindowTag :: Window -> X ()
