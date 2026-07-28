@@ -29,7 +29,10 @@ import Safe (headMay)
 -- | Simple semantic mapping for 'S.Seq' operations.
 data Direction = L | R
 
--- | Hide a visible window and refresh.
+-- | Hide a visible window and refresh. Inserts on the right, away from the
+-- left end where the autohide layout hides and unhides, so the refresh this
+-- action triggers does not pull the window straight back out; the right end
+-- is also what 'withLastHidden' retrieves.
 hideWindow :: Window -> X ()
 hideWindow w = hideWindowThen R w $ do
   BW.focusDown

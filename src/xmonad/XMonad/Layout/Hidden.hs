@@ -58,7 +58,7 @@ instance LayoutModifier HideNAt Window where
         visibleFilter w = notElem w hiddenW && notMember w floatingW
         willHideW = length visibleW > at
         willUnhideW = not (null hiddenW) && length visibleW < at
-        unhideTarget = peekOn R hiddenW
+        unhideTarget = peekOn L hiddenW
         unhiddenTiles = W.integrate' realStack `intersect` (unhideTarget : visibleW)
         stackToBeTiled | willHideW = deleteNthElem (n - 1) (W.stack ws)
                        | willUnhideW = W.differentiate unhiddenTiles
