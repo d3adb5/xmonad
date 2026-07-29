@@ -58,21 +58,18 @@ instance LayoutModifier HideNAt Window where
         visibleFilter w = notElem w hiddenW && notMember w floatingW
         willHideW = length visibleW > at
         willUnhideW = not (null hiddenW) && length visibleW < at
+        hideTarget = visibleW !! (n - 1)
         unhideTarget = peekOn L hiddenW
         unhiddenTiles = W.integrate' realStack `intersect` (unhideTarget : visibleW)
-        stackToBeTiled | willHideW = deleteNthElem (n - 1) (W.stack ws)
+        stackToBeTiled | willHideW = W.filter (/= hideTarget) =<< W.stack ws
                        | willUnhideW = W.differentiate unhiddenTiles
                        | otherwise = W.stack ws
     when willUnhideW $ do
       unhideWindowThen unhideTarget (pure ())
       when (headMay unhiddenTiles == Just unhideTarget) $
         promoteInStack (W.tag ws) unhideTarget
-    when willHideW $ hideWindowInThen L (visibleW !! (n - 1)) (W.tag ws) (pure ())
+    when willHideW $ hideWindowInThen L hideTarget (W.tag ws) (pure ())
     runLayout (ws { W.stack = stackToBeTiled }) rect
-
-deleteNthElem :: Int -> Maybe (W.Stack a) -> Maybe (W.Stack a)
-deleteNthElem n s = let (start, end) = splitAt n $ W.integrate' s
-  in W.differentiate $ take (n - 1) start ++ end
 
 -- | Move a window to the top of its workspace's tiled stack, without a refresh
 -- and preserving the focused window. Floating windows stay in place.
