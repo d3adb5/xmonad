@@ -21,6 +21,7 @@ import XMonad.Util.Hidden
 import qualified XMonad.Layout.BoringWindows as BW
 import qualified XMonad.StackSet as W
 
+import Control.Monad.Extra (whenJustM)
 import Data.Map (notMember)
 import Data.Maybe (fromMaybe)
 import qualified Data.Sequence as S
@@ -40,11 +41,11 @@ hideWindow w = hideWindowThen R w $ do
 
 -- | Hide a visible window and perform an 'X' action afterwards.
 hideWindowThen :: Direction -> Window -> X () -> X ()
-hideWindowThen d w a = currentWorkspace >>= flip (hideWindowInThen d w) a
+hideWindowThen d w a = whenJustM (workspaceOf w) $ flip (hideWindowInThen d w) a
 
 -- | Hide a visible window and perform an 'X' action afterwards.
 hideWindowInThen :: Workspace w => Direction -> Window -> w -> X () -> X ()
-hideWindowInThen d w ws action = whenX (not <$> isHidden w) $ do
+hideWindowInThen d w ws action = whenX (isVisibleIn ws w) $ do
   modifyHiddenIn ws $ insertOn d w
   action
 
@@ -58,11 +59,11 @@ unhideWindowThenRefresh w mws = unhideWindowThen w $ windows mws
 
 -- | Unhide a hidden window and perform an 'X' action afterwards.
 unhideWindowThen :: Window -> X () -> X ()
-unhideWindowThen w a = currentWorkspace >>= flip (unhideWindowInThen w) a
+unhideWindowThen w a = whenJustM (workspaceOf w) $ flip (unhideWindowInThen w) a
 
 -- | Unhide a hidden window and perform an 'X' action afterwards.
 unhideWindowInThen :: Workspace w => Window -> w -> X () -> X ()
-unhideWindowInThen w ws action = whenX (isHidden w) $ do
+unhideWindowInThen w ws action = whenX (isHiddenIn ws w) $ do
   modifyHiddenIn ws $ delete w
   broadcastMessage BW.UpdateBoring
   action

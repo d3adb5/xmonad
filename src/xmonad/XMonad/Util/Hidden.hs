@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
 --------------------------------------------------------------------------------
 -- |
 -- Creates the record that will be stored through X.U.ExtensibleState, as well
@@ -19,12 +19,22 @@ module XMonad.Util.Hidden
   , getAllHidden
   , withHidden
   , currentWorkspace
+
   , isHidden
   , isHiddenHere
   , isHiddenIn
+  , isVisible
+  , isVisibleHere
+  , isVisibleIn
+
+  , visibleIn
+  , visibleTilesIn
+  , visibleTilesIn'
 
   -- miscellaneous helper functions
   , workspaceStackByTag
+  , workspaceOf
+  , notFloating
   ) where
 
 import XMonad
@@ -39,8 +49,12 @@ import Data.Maybe (fromMaybe)
 import qualified Data.Sequence as S
 
 -- These are really just for brevity in type annotations.
-type WindowSeq  = S.Seq Window
-type HSWSWinMap = Map WorkspaceId WindowSeq
+type WindowSeq   = S.Seq Window
+type HSWSWinMap  = Map WorkspaceId WindowSeq
+type WindowStack = W.Stack Window
+
+-- Generic version of `WindowSpace` for instancing.
+type WindowSpace' l = W.Workspace WorkspaceId (l Window) Window
 
 newtype Hidden = Hidden (Map WorkspaceId (S.Seq Window))
   deriving (Eq, Read, Show)
@@ -53,7 +67,7 @@ instance ExtensionClass Hidden where
 class Workspace a where
   tag :: a -> WorkspaceId
 
-instance Workspace WindowSpace where
+instance (LayoutClass l Window) => Workspace (WindowSpace' l) where
   tag = W.tag
 instance Workspace WorkspaceId where
   tag = id
@@ -111,6 +125,18 @@ isHidden :: Window -> X Bool
 isHidden w = withHidden $ return . M.foldr hasBeenSeen False
   where hasBeenSeen s acc = acc || elem w s
 
+-- | Check if a window is visible in the current workspace.
+isVisibleHere :: Window -> X Bool
+isVisibleHere w = currentWorkspace >>= flip isVisibleIn w
+
+-- | Check if a window is visible in the given workspace.
+isVisibleIn :: Workspace a => a -> Window -> X Bool
+isVisibleIn ws w = not <$> isHiddenIn ws w
+
+-- | Check if a window is visible in any workspace.
+isVisible :: Window -> X Bool
+isVisible w = not <$> isHidden w
+
 -- | Convenient window map extraction from the 'Hidden' type.
 fromHidden :: Hidden -> Map WorkspaceId (S.Seq Window)
 fromHidden (Hidden m) = m
@@ -120,6 +146,31 @@ inH :: (HSWSWinMap -> HSWSWinMap) -> Hidden -> Hidden
 inH f (Hidden m) = Hidden (f m)
 
 -- | The workspace's stack as it exists in the window set.
-workspaceStackByTag :: WorkspaceId -> X (Maybe (W.Stack Window))
-workspaceStackByTag t = withWindowSet $ return
-  . msum . map W.stack . filter ((== t) . W.tag) . W.workspaces
+workspaceStackByTag :: Workspace a => a -> X (Maybe (W.Stack Window))
+workspaceStackByTag ws = withWindowSet $ return
+  . msum . map W.stack . filter ((== tag ws) . W.tag) . W.workspaces
+
+-- | Find the workspace a window is in, maybe.
+workspaceOf :: Window -> X (Maybe WorkspaceId)
+workspaceOf w = withWindowSet $ return . W.findTag w
+
+-- | Filter floating windows out of a `Maybe WindowStack`.
+notFloating :: Maybe WindowStack -> X (Maybe WindowStack)
+notFloating s = do
+  floatingWindowMap <- withWindowSet $ return . W.floating
+  return $ W.filter (flip M.notMember floatingWindowMap) =<< s
+
+-- | Filter out hidden windows from a given 'WindowStack'.
+visibleIn :: Workspace a => a -> X (Maybe WindowStack)
+visibleIn ws = do
+  workspaceStack <- workspaceStackByTag $ tag ws
+  hiddenWindows <- getHiddenIn $ tag ws
+  return $ W.filter (flip notElem hiddenWindows) =<< workspaceStack
+
+-- | Get a '[Window]' without floating or hidden windows in a given workspace.
+visibleTilesIn :: Workspace a => a -> X [Window]
+visibleTilesIn ws = W.integrate' <$> visibleTilesIn' ws
+
+-- | Get a 'WindowStack' w/o floating or hidden windows in a given workspace.
+visibleTilesIn' :: Workspace a => a -> X (Maybe WindowStack)
+visibleTilesIn' ws = visibleIn ws >>= notFloating
