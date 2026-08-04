@@ -44,7 +44,9 @@ executable xmonad
       Config.Layouts
       Config.LogHook
       Config.ManageHook
+      Config.Scratchpads
       Config.StartupHook
+      Util.Scratch
       XMonad.Actions.Fzfmenu
       XMonad.Actions.Hidden
       XMonad.Actions.Pip

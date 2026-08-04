@@ -11,8 +11,9 @@ import XMonad.Actions.Hidden
 import XMonad.Actions.PhysicalScreens
 import XMonad.Layout.BoringWindows (focusDown, focusUp)
 
-import qualified Config.ManageHook as MH
 import qualified XMonad.StackSet as W
+
+import Config.Scratchpads (toggleScratchpad)
 
 keyBindings :: [(String, X ())]
 keyBindings =
@@ -31,7 +32,9 @@ keyBindings =
   , ("M-M1-j", withFocused $ swapWithHidden L)
   , ("M-M1-k", withFocused $ swapWithHidden R)
   , ("M-M1-l", withLastHidden unhideWindow)
-  , ("M-[", MH.scratchpadToggle)
+  , ("M-[", toggleScratchpad "terminal")
+  , ("M-]", toggleScratchpad "terminal")
+  , ("M-<Page_Up>", toggleScratchpad "volume-mixer")
   , ("M-C-y", withFocused copyToWorkspace)
   , ("M-<Backspace>", kill1)
   , ("M-S-y", withFocused $ moveToWorkspace)

@@ -1,27 +1,26 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
-module Config.ManageHook (manageHook, scratchpads, scratchpadToggle) where
+module Config.ManageHook (manageHook) where
 
 import XMonad hiding (manageHook, borderWidth)
 import XMonad.Hooks.EwmhDesktops (ewmhDesktopsManageHook)
 import XMonad.Hooks.InsertPosition
 import XMonad.Hooks.ManageHelpers
 import XMonad.Util.CenterRationalRect
-import XMonad.Util.NamedScratchpad hiding (name, query, hook)
 import XMonad.StackSet (floating)
 
 import qualified XMonad.Actions.DynamicWorkspaces as DW
 import qualified XMonad.StackSet as W
 
-import Config.Dimensions
-import Control.Monad (filterM)
-import Data.List (singleton)
 import Data.List.Extra (lower)
 import Data.Map (member)
 import Data.Ratio
 
+import Config.Dimensions
+import Config.Scratchpads (scratchMHook)
+
 manageHook :: ManageHook
 manageHook = composeAll
-  [ namedScratchpadManageHook scratchpads
+  [ scratchMHook
   , ewmhDesktopsManageHook
   , classNameIn' chatClassNames --> moveToWorkspace "chat"
   , classNameIn' mediaClassNames --> moveToWorkspace "media"
@@ -49,14 +48,6 @@ manageHook = composeAll
       , "fzfmenu"
       , "mpv" ]
 
-scratchpads :: [NamedScratchpad]
-scratchpads = singleton $ NS name command query (liftX screenDimsM >>= hook')
-  where command = "st -n scratch -t scratch -e tmux new -A -s scratch"
-        hook' (w, h) = customFloating $ centerIRectOffsetY panelHeight tw th w h
-        (tw, th) = (columnsToWindowWidth 150, linesToWindowHeight 40)
-        query = appName =? "scratch"
-        name = "term"
-
 -- | Properly center a floating window in the available screen real estate.
 centerFloat :: ManageHook
 centerFloat = do
@@ -68,21 +59,6 @@ centerFloat = do
         offsetY | addedHeightRatio <= (1 - panelHeightRatio) = panelHeightRatio
                 | otherwise = 0
     in centerRRectOffsetY offsetY addedWidthRatio addedHeightRatio
-
--- | Toggle the scratchpad. When showing, silently rewrite its floating rect
--- against the focused screen first so the window is mapped at the correct
--- size from the start (no resize-after-map flash for the compositor).
-scratchpadToggle :: X ()
-scratchpadToggle = do
-  ws <- withWindowSet return
-  hits <- filterM (runQuery (appName =? "scratch")) (W.allWindows ws)
-  case [w | w <- hits, w `notElem` W.index ws] of
-    (w:_) -> screenDimsM >>= \(sw, sh) ->
-      windows $ W.float w (centerIRectOffsetY panelHeight tw th sw sh)
-    _ -> return ()
-  namedScratchpadAction scratchpads "term"
-  where
-    (tw, th) = (columnsToWindowWidth 150, linesToWindowHeight 40)
 
 -- | Shift a window to a given workspace (create it if it doesn't exist) and
 -- make it the current workspace.
