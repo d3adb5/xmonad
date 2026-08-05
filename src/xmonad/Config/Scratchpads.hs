@@ -9,11 +9,12 @@ import Util.Scratch
 scratchpads :: [Scratch]
 scratchpads =
   [ Scratch
-    { name    = "terminal"
-    , command = "st -n scratch -t scratch -e tmux new -A -s scratch"
-    , query   = appName =? "scratch"
-    , width   = columnsToWindowWidth 150
-    , height  = linesToWindowHeight 40
+    { name      = "terminal"
+    , command   = "st -n scratch -t scratch -e tmux new -A -s scratch"
+    , query     = appName =? "scratch"
+    , width     = columnsToWindowWidth 150
+    , height    = linesToWindowHeight 40
+    , ephemeral = False
     }
   , Scratch
     { name      = "volume-mixer"
@@ -21,6 +22,7 @@ scratchpads =
     , query     = appName =? "pwvucontrol"
     , width     = 800
     , height    = 600
+    , ephemeral = True
     }
   ]
 

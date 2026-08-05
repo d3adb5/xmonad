@@ -14,11 +14,12 @@ import Data.List (find, (\\))
 
 -- | A named scratchpad, allowing for fixed window geometry.
 data Scratch = Scratch
-  { name    :: String
-  , command :: String
-  , query   :: Query Bool
-  , width   :: Int
-  , height  :: Int }
+  { name      :: String
+  , command   :: String
+  , query     :: Query Bool
+  , width     :: Int
+  , height    :: Int
+  , ephemeral :: Bool }
 
 -- | Convert a `Scratch` into a `NS.NamedScratchpad`.
 toNamedScratchpad :: Scratch -> NS.NamedScratchpad
@@ -28,10 +29,12 @@ toNamedScratchpad ns = NS.NS
   , query = query ns
   , hook  = scratchWindowHook ns }
 
--- | Get a list of off-screen `Window` that match a `Scratch`'s `query`.
-offscreenMatches :: Scratch -> X [Window]
-offscreenMatches scratch = withWindowSet $ \wset ->
-  filterM (runQuery (query scratch)) (W.allWindows wset \\ W.index wset)
+-- | Get a list of `Window` that match a `Scratch`'s `query`, on and off screen.
+screenMatches :: Scratch -> X ([Window], [Window])
+screenMatches scratch = withWindowSet $ \wset -> do
+  off <- filterM (runQuery (query scratch)) (W.allWindows wset \\ W.index wset)
+  on <- filterM (runQuery (query scratch)) (W.index wset)
+  return (on, off)
 
 -- | Calculate a `W.RationalRect` desired by a `Scratch`.
 scratchRect :: Scratch -> X W.RationalRect
@@ -53,7 +56,9 @@ toggleScratch ss tgt = whenJust (find ((== tgt) . name) ss) $ toggleScratch' nss
 
 toggleScratch' :: [NS.NamedScratchpad] -> Scratch -> X ()
 toggleScratch' nss scratch = do
-  (rect, offscreen) <- (,) <$> scratchRect scratch <*> offscreenMatches scratch
-  when (not $ null offscreen) $ do
-    windows $ \wset -> foldr (flip W.float rect) wset offscreen
+  (rect, (onsc, offsc)) <- (,) <$> scratchRect scratch <*> screenMatches scratch
+  when (not $ null offsc) $ do
+    windows $ \wset -> foldr (flip W.float rect) wset offsc
   NS.namedScratchpadAction nss (name scratch)
+  when (null offsc && ephemeral scratch) $ do
+    sequence_ $ map killWindow onsc
