@@ -17,7 +17,7 @@ import Config.Scratchpads (toggleScratchpad)
 
 keyBindings :: [(String, X ())]
 keyBindings =
-  [ ("M-]", ask >>= spawn . terminal . config)
+  [ ("M-<Return>", ask >>= spawn . terminal . config)
   , ("M-j", focusDown)
   , ("M-k", focusUp)
   , ("M-<R>", moveTo Next (WSIs . return $ (/= "NSP") . W.tag))
@@ -25,9 +25,9 @@ keyBindings =
   , ("M-C-t", withFocused addWindowTag)
   , ("M-S-t", withFocused removeWindowTag)
   , ("M-a", selectWindow)
-  , ("M-y", selectWorkspace)
-  , ("M-u", renameWorkspace)
-  , ("M-i", removeWorkspaceIfEmpty)
+  , ("M-\\", selectWorkspace)
+  , ("M-S-\\", renameWorkspace)
+  , ("M-M1-\\", removeWorkspaceIfEmpty)
   , ("M-M1-h", withFocused hideWindow)
   , ("M-M1-j", withFocused $ swapWithHidden L)
   , ("M-M1-k", withFocused $ swapWithHidden R)
