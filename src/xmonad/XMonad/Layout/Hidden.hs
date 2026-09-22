@@ -18,7 +18,7 @@ import qualified XMonad.Layout.BoringWindows as BW
 
 import Control.Monad (when)
 import Data.List (intersect)
-import Data.Map.Strict (member, notMember)
+import Data.Map.Strict (member)
 import Safe (headMay)
 
 data HiddenL a = HiddenL         deriving (Read, Show)
@@ -51,24 +51,22 @@ instance LayoutModifier HideNAt Window where
   modifierDescription (HideNAt n at) = "Hide " ++ show n ++ " at " ++ show at
 
   modifyLayout (HideNAt n at) ws rect = do
-    floatingW <- withWindowSet $ return . W.floating
-    hiddenW <- getHiddenIn $ W.tag ws
-    realStack <- workspaceStackByTag $ W.tag ws
-    let visibleW = W.integrate' $ W.filter visibleFilter =<< W.stack ws
-        visibleFilter w = notElem w hiddenW && notMember w floatingW
-        willHideW = length visibleW > at
-        willUnhideW = not (null hiddenW) && length visibleW < at
-        hideTarget = visibleW !! (n - 1)
-        unhideTarget = peekOn L hiddenW
-        unhiddenTiles = W.integrate' realStack `intersect` (unhideTarget : visibleW)
+    (visible, ommitted) <- liftA2 (,) (visibleTilesIn ws) (getHiddenIn ws)
+    realStack <- W.integrate' <$> workspaceStackByTag ws
+    let willHideW = length visible > at
+        willUnhideW = not (null ommitted) && length visible < at
+        hideTarget = visible !! (n - 1)
+        unhideTarget = peekOn L ommitted
+        unhiddenTiles = realStack `intersect` (unhideTarget : visible)
         stackToBeTiled | willHideW = W.filter (/= hideTarget) =<< W.stack ws
                        | willUnhideW = W.differentiate unhiddenTiles
                        | otherwise = W.stack ws
+
     when willUnhideW $ do
-      unhideWindowThen unhideTarget (pure ())
+      unhideWindowInThen unhideTarget ws (pure ())
       when (headMay unhiddenTiles == Just unhideTarget) $
         promoteInStack (W.tag ws) unhideTarget
-    when willHideW $ hideWindowInThen L hideTarget (W.tag ws) (pure ())
+    when willHideW $ hideWindowInThen L hideTarget ws (pure ())
     runLayout (ws { W.stack = stackToBeTiled }) rect
 
 -- | Move a window to the top of its workspace's tiled stack, without a refresh
