@@ -24,7 +24,7 @@ manageHook = composeAll
   , ewmhDesktopsManageHook
   , classNameIn' chatClassNames --> moveToWorkspace "chat"
   , classNameIn' mediaClassNames --> moveToWorkspace "media"
-  , className' =? "Gimp" --> moveToWorkspace "gimp"
+  , className' =? "gimp" --> moveToWorkspace "gimp"
   , composeOne $ hookClassNames' centerFloat floatClassNames
               ++ hookPropValues centerFloat floatPropValues
               ++ hookClassNames' (moveToWorkspace "games") gameClassNames
